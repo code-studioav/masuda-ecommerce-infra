@@ -17,7 +17,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       app_name: ${{ steps.set-variables.outputs.app_name }}
-      env_upper: ${{ steps.env-uppercase.outputs.uppercase }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -27,21 +26,14 @@ jobs:
         run: |
           npm install
           echo "::set-output name=app_name::$(bash read_from_properties.sh ./project_properties.toml project.definition.name)"
-      - id: env-uppercase
-        name: Set environment name uppercase
-        uses: ASzc/change-string-case-action@v6
-        with:
-          string: ${{ inputs.environment }}
   deploy-pipeline:
     name: Deploy dev pipeline
     needs: [set-variables]
     runs-on: ubuntu-latest
     env:
       ENVIRONMENT: ${{ inputs.environment }}
-      ENVIRONMENT_UPPER: ${{ needs.set-variables.outputs.env_upper }}
-      FORMAT_KEY: ${{ format('AWS_ACCOUNT_ID_{0}', needs.set-variables.outputs.env_upper) }}
-      AWS_ROLE_TO_ASSUME: ${{ secrets[format('AWS_ROLE_TO_ASSUME_{0}', needs.set-variables.outputs.env_upper )] }}
-      AWS_REGION: ${{ secrets[format('AWS_REGION_{0}', needs.set-variables.outputs.env_upper )] }}
+      AWS_ROLE_TO_ASSUME: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
       APP_NAME: ${{ needs.set-variables.outputs.app_name }}
     steps:
       - uses: actions/checkout@v4
@@ -64,9 +56,9 @@ jobs:
     needs: [set-variables, deploy-pipeline]
     env: 
       ENVIRONMENT: ${{ inputs.environment }}
-      AWS_ACCOUNT_ID: ${{ secrets[format('AWS_ACCOUNT_ID_{0}', needs.set-variables.outputs.env_upper)] }}
-      AWS_ROLE_TO_ASSUME: ${{ secrets[format('AWS_ROLE_TO_ASSUME_{0}', needs.set-variables.outputs.env_upper)] }}
-      AWS_REGION: ${{ secrets[format('AWS_REGION_{0}', needs.set-variables.outputs.env_upper)] }}
+      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+      AWS_ROLE_TO_ASSUME: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
       APP_NAME: ${{ needs.set-variables.outputs.app_name }}
     steps:
       - uses: actions/checkout@v4
