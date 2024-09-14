@@ -1,0 +1,3 @@
+[project.definition]
+name = "my-awesome-project"
+description = "Awesome project to deploy a full RDS network infra using cloudformation"

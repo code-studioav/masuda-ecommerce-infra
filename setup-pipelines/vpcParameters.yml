@@ -1,0 +1,133 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: JSON string
+Parameters:
+  EnvironmentName:
+    Type: String
+    AllowedValues:
+      - dev
+      - qa
+      - staging
+      - prod
+  Project:
+    Type: String
+
+Mappings:
+  EnvironMap:
+    dev:
+      VpcCidrBusiness: 10.11.0.0/16
+      CidrBusinessPrivateSubnetA: 10.11.12.0/24
+      CidrBusinessPrivateSubnetB: 10.11.22.0/24
+      CidrBusinessPrivateSubnetC: 10.11.32.0/24
+      CidrBusinessPublicSubnetA: 10.11.42.0/24
+      CidrBusinessPublicSubnetB: 10.11.52.0/24
+      CidrBusinessPublicSubnetC: 10.11.62.0/24
+
+    qa: 
+      VpcCidrBusiness: 10.61.0.0/16
+      CidrBusinessPrivateSubnetA: 10.61.12.0/24
+      CidrBusinessPrivateSubnetB: 10.61.22.0/24
+      CidrBusinessPrivateSubnetC: 10.61.32.0/24
+      CidrBusinessPublicSubnetA: 10.61.42.0/24
+      CidrBusinessPublicSubnetB: 10.61.52.0/24
+      CidrBusinessPublicSubnetC: 10.61.62.0/24
+    
+    staging:
+      VpcCidrBusiness: 10.61.0.0/16
+      CidrBusinessPrivateSubnetA: 10.61.12.0/24
+      CidrBusinessPrivateSubnetB: 10.61.22.0/24
+      CidrBusinessPrivateSubnetC: 10.61.32.0/24
+      CidrBusinessPublicSubnetA: 10.61.42.0/24
+      CidrBusinessPublicSubnetB: 10.61.52.0/24
+      CidrBusinessPublicSubnetC: 10.61.62.0/24
+
+    prod: 
+      VpcCidrBusiness: 10.189.0.0/16
+      CidrBusinessPrivateSubnetA: 10.189.12.0/28
+      CidrBusinessPrivateSubnetB: 10.189.22.0/28
+      CidrBusinessPrivateSubnetC: 10.189.32.0/28
+      CidrBusinessPublicSubnetA: 10.189.42.0/28
+      CidrBusinessPublicSubnetB: 10.189.52.0/28
+      CidrBusinessPublicSubnetC: 10.189.62.0/28
+
+  
+Resources:
+  SSMVpcBusinessCidr:
+    Type: 'AWS::SSM::Parameter'
+    Properties:
+      Name: !Sub '/config/infra/${Project}/vpc-business/cidr'
+      Tier: Standard
+      Type: String
+      Value:
+        !FindInMap 
+        - EnvironMap
+        - !Ref EnvironmentName
+        - VpcCidrBusiness
+  SSMCidrBusinessPrivateSubnetA:
+    Type: 'AWS::SSM::Parameter'
+    Properties:
+      Name: !Sub '/config/infra/${Project}/vpc-business/cidr-private-subnet-a'
+      Tier: Standard
+      Type: String
+      Value:
+        !FindInMap 
+        - EnvironMap
+        - !Ref EnvironmentName
+        - CidrBusinessPrivateSubnetA
+  SSMCidrBusinessPrivateSubnetB:
+    Type: 'AWS::SSM::Parameter'
+    Properties:
+      Name: !Sub '/config/infra/${Project}/vpc-business/cidr-private-subnet-b'
+      Tier: Standard
+      Type: String
+      Value:
+        !FindInMap 
+        - EnvironMap
+        - !Ref EnvironmentName
+        - CidrBusinessPrivateSubnetB
+  SSMCidrBusinessPrivateSubnetC:
+    Type: 'AWS::SSM::Parameter'
+    Properties:
+      Name: !Sub '/config/infra/${Project}/vpc-business/cidr-private-subnet-c'
+      Tier: Standard
+      Type: String
+      Value:
+        !FindInMap 
+        - EnvironMap
+        - !Ref EnvironmentName
+        - CidrBusinessPrivateSubnetC
+  SSMCidrBusinessPublicSubnetA:
+    Type: 'AWS::SSM::Parameter'
+    Properties:
+      Name: !Sub '/config/infra/${Project}/vpc-business/cidr-public-subnet-a'
+      Tier: Standard
+      Type: String
+      Value:
+        !FindInMap 
+        - EnvironMap
+        - !Ref EnvironmentName
+        - CidrBusinessPublicSubnetA
+  SSMCidrBusinessPublicSubnetB:
+    Type: 'AWS::SSM::Parameter'
+    Properties:
+      Name: !Sub '/config/infra/${Project}/vpc-business/cidr-public-subnet-b'
+      Tier: Standard
+      Type: String
+      Value:
+        !FindInMap 
+        - EnvironMap
+        - !Ref EnvironmentName
+        - CidrBusinessPublicSubnetB
+  SSMCidrBusinessPublicSubnetC:
+    Type: 'AWS::SSM::Parameter'
+    Properties:
+      Name: !Sub '/config/infra/${Project}/vpc-business/cidr-public-subnet-c'
+      Tier: Standard
+      Type: String
+      Value:
+        !FindInMap 
+        - EnvironMap
+        - !Ref EnvironmentName
+        - CidrBusinessPublicSubnetC
+  
+
+  

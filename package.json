@@ -1,0 +1,11 @@
+{
+  "name": "toml-environ-parser",
+  "scripts": {
+    "read_key": "node environ_toml_parser.js"
+  },
+  "dependencies": {
+    "concat-stream": "^2.0.0",
+    "minimist": "^1.2.8",
+    "toml": "^3.0.0"
+  }
+}

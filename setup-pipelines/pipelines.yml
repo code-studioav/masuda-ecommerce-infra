@@ -1,0 +1,378 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Build a basic pipeline
+Parameters:
+  EnvironmentName:
+    Type: String
+    AllowedValues:
+      - dev
+      - qa
+      - staging
+      - prod
+    Description: Environment name.
+    Default: dev
+  AppName:
+    Type: String
+    ConstraintDescription: '[a-z]+'
+    Description: The project name.
+  PrincipalTemplate:
+    Type: String
+    Description: Template name to use in cloudformation deploy.
+    Default: 'masterTemplate.yaml'
+  PrincipalTemplateZip:
+    Type: String
+    Description: Template name to use in cloudformation deploy.
+    Default: 'masterTemplate.zip'
+Resources:
+  PipelineEventRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: 'sts:AssumeRole'
+            Principal:
+              Service:
+                - events.amazonaws.com
+      Path: /
+      Policies:
+        -
+          PolicyName: !Sub '${EnvironmentName}-${AppName}-eb-pipeline-execution'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: codepipeline:StartPipelineExecution
+                Resource: !Join [ '', [ 'arn:aws:codepipeline:', !Ref 'AWS::Region', ':', !Ref 'AWS::AccountId', ':', !Ref PipelineInfra ] ]
+  PipelineEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - aws.s3
+        detail-type:
+          - 'AWS API Call via CloudTrail'
+        detail:
+          eventSource:
+            - s3.amazonaws.com
+          eventName:
+            - CopyObject
+            - PutObject
+            - CompleteMultipartUpload
+          requestParameters:
+            bucketName:
+              - !Ref S3CodePipelineArtifactStore
+            key:
+              - !Sub '${AppName}/deploys/networking-db/infra/${PrincipalTemplateZip}'
+      Targets:
+        -
+          Arn:
+            !Join [ '', [ 'arn:aws:codepipeline:', !Ref 'AWS::Region', ':', !Ref 'AWS::AccountId', ':', !Ref PipelineInfra ] ]
+          RoleArn: !GetAtt PipelineEventRole.Arn
+          Id: codepipeline-event-fire
+  PipelineInfra:
+    Type: 'AWS::CodePipeline::Pipeline'
+    Properties:
+      Name: !Sub '${EnvironmentName}-${AppName}-networking-db-infra-pipeline'
+      RoleArn: !GetAtt
+        - ROLCodePipeline
+        - Arn
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: !Sub 'Source${AppName}'
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Version: 1
+                Provider: S3
+              OutputArtifacts:
+                - Name: SourceOutput
+              Configuration:
+                S3Bucket: !Ref S3CodePipelineArtifactStore
+                S3ObjectKey: !Sub '${AppName}/deploys/networking-db/infra/${PrincipalTemplateZip}'
+                PollForSourceChanges: false
+              RunOrder: 1
+        - Name: Deploy
+          Actions:
+            - Name: CreateChangeSet
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: 1
+                Provider: CloudFormation
+              Configuration:
+                ActionMode: CHANGE_SET_REPLACE
+                ChangeSetName: !Sub '${EnvironmentName}-${AppName}-changeSet'
+                StackName: !Sub '${EnvironmentName}-${AppName}-stack'
+                Capabilities: 'CAPABILITY_IAM,CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND'
+                TemplatePath:
+                  'Fn::Sub': 'SourceOutput::${PrincipalTemplate}'
+                RoleArn: !GetAtt
+                  - ROLCloudFormation
+                  - Arn
+                ParameterOverrides: !Sub >-
+                  {"EnvironmentName":"${EnvironmentName}","AppName":"/config/${EnvironmentName}/infra/project/AppName"}
+              RunOrder: 1
+              InputArtifacts:
+                - Name: SourceOutput
+            - Name: ChangesetExcecute
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: 1
+                Provider: CloudFormation
+              Configuration:
+                ActionMode: CHANGE_SET_EXECUTE
+                ChangeSetName: !Sub '${EnvironmentName}-${AppName}-changeSet'
+                StackName: !Sub '${EnvironmentName}-${AppName}-stack'
+              RunOrder: 2
+              InputArtifacts:
+                - Name: SourceOutput
+      ArtifactStore:
+        Type: S3
+        Location: !Ref S3CodePipelineArtifactStore
+  ROLCodePipeline:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: !Sub '${EnvironmentName}-${AppName}-CodePipeline-Service-Role'
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: 'sts:AssumeRole'
+            Principal:
+              Service:
+                - codepipeline.amazonaws.com
+      Path: /
+      Policies:
+        - PolicyName: !Sub '${EnvironmentName}-${AppName}-CodePipeline-Policy'
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'iam:PassRole'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'ec2:*'
+                  - 'cloudwatch:*'
+                  - 'cloudformation:*'
+                  - 'rds:*'
+                Resource: '*'
+              - Effect: Allow
+                Action: 's3:*'
+                Resource: !GetAtt
+                  - S3CodePipelineArtifactStore
+                  - Arn
+              - Effect: Allow
+                Action: 's3:*'
+                Resource: !Sub '${S3CodePipelineArtifactStore.Arn}/*'
+  S3CodePipelineArtifactStore:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Sub 'artifacts-${EnvironmentName}-${AWS::Region}-${AWS::AccountId}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+  CloudTrailBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref CloudTrailBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          -
+            Sid: AWSCloudTrailAclCheck
+            Effect: Allow
+            Principal:
+              Service:
+                - cloudtrail.amazonaws.com
+            Action: s3:GetBucketAcl
+            Resource: !GetAtt CloudTrailBucket.Arn
+          -
+            Sid: AWSCloudTrailWrite
+            Effect: Allow
+            Principal:
+              Service:
+                - cloudtrail.amazonaws.com
+            Action: s3:PutObject
+            Resource: !Join [ '', [ !GetAtt CloudTrailBucket.Arn, '/AWSLogs/', !Ref 'AWS::AccountId', '/*' ] ]
+            Condition: 
+              StringEquals:
+                s3:x-amz-acl: bucket-owner-full-control
+  CloudTrailBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+  AwsCloudTrail:
+    DependsOn:
+      - CloudTrailBucketPolicy
+    Type: AWS::CloudTrail::Trail
+    Properties:
+      S3BucketName: !Ref CloudTrailBucket
+      EventSelectors:
+        -
+          DataResources:
+            -
+              Type: AWS::S3::Object
+              Values:
+                - !Join [ '', [ !GetAtt S3CodePipelineArtifactStore.Arn, '/', !Sub 'deploys/networking-db/infra/${PrincipalTemplateZip}' ] ]
+          ReadWriteType: WriteOnly
+          IncludeManagementEvents: false
+      IncludeGlobalServiceEvents: true
+      IsLogging: true
+      IsMultiRegionTrail: true
+  S3PoilicyCodePipelineArtifactStore:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      Bucket: !Ref S3CodePipelineArtifactStore
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS:
+                - !GetAtt
+                  - ROLCodePipeline
+                  - Arn
+                - !GetAtt
+                  - ROLCloudFormation
+                  - Arn
+            Action: 's3:*'
+            Resource: !Sub 'arn:aws:s3:::${S3CodePipelineArtifactStore}/*'
+  ROLCloudFormation:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: !Sub '${EnvironmentName}-${AppName}-CloudFormation-Role'
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: 'sts:AssumeRole'
+            Principal:
+              Service:
+                - cloudformation.amazonaws.com
+      Path: /
+      Policies:
+        - PolicyName: !Sub '${EnvironmentName}-${AppName}-CloudFormation-Policy'
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Resource: 'arn:aws:s3:::*'
+                Action:
+                  - s3:GetBucketPolicy
+                  - s3:PutBucketPolicy
+              - Effect: Allow
+                Action:
+                  - 'elasticfilesystem:*'
+                  - 'autoscaling:*'
+                  - 'waf:*'
+                  - 'rds:*'
+                  - 'kms:*'
+                  - 'acm:*'
+                  - 'route53:*'
+                  - 'cloudfront:*'
+                  - 'wafv2:*'
+                  - 'appsync:*'
+                  - 'waf-regional:*'
+                  - 'dynamodb:*'
+                  - 'elasticloadbalancing:*'
+                  - 'states:*'
+                  - 'organizations:ListPoliciesForTarget'
+                  - 'organizations:ListRoots'
+                  - 'organizations:ListTargetsForPolicy'
+                  - 'apigateway:*'
+                  - 'organizations:DescribeAccount'
+                  - 'cloudformation:CreateChangeSet'
+                  - 's3:*'
+                  - 'secretsmanager:*'
+                  - 'organizations:DescribePolicy'
+                  - 'organizations:ListChildren'
+                  - 'organizations:ListPolicies'
+                  - 'iam:*'
+                  - 'ssm:*'
+                  - 'organizations:DescribeOrganization'
+                  - 'codedeploy:*'
+                  - 'lambda:*'
+                  - 'organizations:DescribeOrganizationalUnit'
+                  - 'organizations:ListParents'
+                  - 'logs:*'
+                  - 'ec2:*'
+                  - 'amplify:*'
+                Resource: '*'
+  SSMBucketArtifacts:
+    Type: 'AWS::SSM::Parameter'
+    Properties:
+      Name: !Sub '/config/${EnvironmentName}/infra/bucket/artifacts'
+      Tier: Standard
+      Type: String
+      Value: !Ref S3CodePipelineArtifactStore
+  SSMBucketCloudtrailLogs:
+    Type: 'AWS::SSM::Parameter'
+    Properties:
+      Name: !Sub '/config/${EnvironmentName}/infra/bucket/cloudtrail'
+      Tier: Standard
+      Type: String
+      Value: !Ref CloudTrailBucket
+  SSMAppNameName:
+    Type: 'AWS::SSM::Parameter'
+    Properties:
+      Name: !Sub '/config/${EnvironmentName}/infra/project/AppName'
+      Tier: Standard
+      Type: String
+      Value: !Ref AppName
+  S3BucketLogs:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Sub 'logs-${EnvironmentName}-${AWS::Region}-${AWS::AccountId}'
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+  S3BucketLogsPolicy:
+    Type: "AWS::S3::BucketPolicy"
+    Properties:
+      Bucket: !Ref S3BucketLogs
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS:
+                - !Sub
+                  - "arn:aws:iam::${ACCOUNT}:root"
+                  - ACCOUNT: !Ref "AWS::AccountId"
+            Action: "s3:*"
+            Resource: !Sub "arn:aws:s3:::${S3BucketLogs}/*"
+          - Effect: Deny
+            Principal:
+              AWS: "*"
+            Action: "*"
+            Resource: !Sub "arn:aws:s3:::${S3BucketLogs}/*"
+            Condition:
+              Bool:
+                "aws:SecureTransport": false
+  SSMBucketLogs:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/config/${EnvironmentName}/infra/bucket/logs"
+      Tier: Standard
+      Type: String
+      Value: !Ref S3BucketLogs

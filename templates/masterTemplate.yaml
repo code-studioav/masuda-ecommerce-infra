@@ -1,0 +1,95 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Database Networking Infra
+Parameters:
+  EnvironmentName:
+    Type: String
+    Description: Environment of the account.
+  Project:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: Name of the project.
+  AppName:
+    Type: String
+    Description: App Name.
+Resources:
+  StackVPCBusiness:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://{{resolve:ssm:/config/${EnvironmentName}/${Project}/infra/bucket/artifacts}}.s3.${AWS::URLSuffix}/${Project}/deploys/networking-db/infra/networking/vpc.yaml'
+      Parameters:
+        Name: !Sub ${EnvironmentName}-${Project}-Business
+        VpcCIDR: !Sub /config/infra/${AppName}/vpc-business/cidr
+        PrivateSubnetACIDR: !Sub /config/infra/${AppName}/vpc-business/cidr-private-subnet-a
+        PrivateSubnetBCIDR: !Sub /config/infra/${AppName}/vpc-business/cidr-private-subnet-b
+        PrivateSubnetCCIDR: !Sub /config/infra/${AppName}/vpc-business/cidr-private-subnet-c
+        PublicSubnetACIDR: !Sub /config/infra/${AppName}/vpc-business/cidr-public-subnet-a
+        #PublicSubnetBCIDR: !Sub /config/infra/${AppName}/vpc-business/cidr-public-subnet-b
+        #PublicSubnetCCIDR: !Sub /config/infra/${AppName}/vpc-business/cidr-public-subnet-c
+      TimeoutInMinutes: 60
+  StackNatIG:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://{{resolve:ssm:/config/${EnvironmentName}/${Project}/infra/bucket/artifacts}}.s3.${AWS::URLSuffix}/${Project}/deploys/networking-db/infra/networking/nat-ig-gateways.yaml'
+      Parameters:
+        Name: !Sub ${EnvironmentName}-${Project}-Business
+        VPCID: !GetAtt StackVPCBusiness.Outputs.VPCID
+        PublicSubnetA: !GetAtt StackVPCBusiness.Outputs.PublicSubnetA
+        #PublicSubnetB: !GetAtt StackVPCBusiness.Outputs.PublicSubnetB
+        #PublicSubnetC: !GetAtt StackVPCBusiness.Outputs.PublicSubnetC
+      TimeoutInMinutes: 60
+  StackAccessRulesBusiness:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://{{resolve:ssm:/config/${EnvironmentName}/${Project}/infra/bucket/artifacts}}.s3.${AWS::URLSuffix}/${Project}/deploys/networking-db/infra/networking/access-rules.yaml'
+      Parameters:
+        Name:
+          Fn::Sub: ${EnvironmentName}-${Project}-Business
+        VPCID: !GetAtt StackVPCBusiness.Outputs.VPCID
+        PrivateSubnetA: !GetAtt StackVPCBusiness.Outputs.PrivateSubnetA
+        PrivateSubnetB: !GetAtt StackVPCBusiness.Outputs.PrivateSubnetB
+        PrivateSubnetC: !GetAtt StackVPCBusiness.Outputs.PrivateSubnetC
+        PublicSubnetA: !GetAtt StackVPCBusiness.Outputs.PublicSubnetA
+        #PublicSubnetB: !GetAtt StackVPCBusiness.Outputs.PublicSubnetB
+        #PublicSubnetC: !GetAtt StackVPCBusiness.Outputs.PublicSubnetC
+        InternetGateway: !GetAtt StackNatIG.Outputs.InternetGateway
+        NatGatewayA: !GetAtt StackNatIG.Outputs.NatGatewayA
+        #NatGatewayB: !GetAtt StackNatIG.Outputs.NatGatewayB
+        #NatGatewayC: !GetAtt StackNatIG.Outputs.NatGatewayC
+      TimeoutInMinutes: 60
+  
+  
+  #StackBastion:
+  #  Type: AWS::CloudFormation::Stack
+  #  Properties:
+  #    TemplateURL: !Sub 'https://{{resolve:ssm:/config/${EnvironmentName}/${Project}/infra/bucket/artifacts}}.s3.${AWS::URLSuffix}/${Project}/deploys/networking-db/infra/bastion.yaml'
+  #    Parameters:
+  #      Environment: !Ref EnvironmentName
+  #      AppName: !Ref AppName
+  #      Name: !Sub ${EnvironmentName}-${Project}-Business
+  #      NatGateway: !GetAtt StackNatIG.Outputs.NatGateway
+  #      PrivateRouteTable: !GetAtt StackAccessRulesBusiness.Outputs.PrivateRouteTable
+  #      PrivateSubnets: !Join
+  #        - ','
+  #        - - !GetAtt StackVPCBusiness.Outputs.PrivateSubnetA
+  #          - !GetAtt StackVPCBusiness.Outputs.PrivateSubnetB
+  #          - !GetAtt StackVPCBusiness.Outputs.PrivateSubnetC
+  #      VPCData: !GetAtt StackVPCBusiness.Outputs.VPCID
+  #      KeyPairSSM: !Sub '/config/infra/${AppName}/key-pair'
+  #      SourceCidr: 0.0.0.0/0
+  #    TimeoutInMinutes: 60
+  
+  StackRDS:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://{{resolve:ssm:/config/${EnvironmentName}/${Project}/infra/bucket/artifacts}}.s3.${AWS::URLSuffix}/${Project}/deploys/networking-db/infra/rds.yaml'
+      Parameters:
+        Environment: !Ref EnvironmentName
+        PrivateSubnets: !GetAtt StackVPCBusiness.Outputs.PrivateSubnets
+        Project: !Ref Project
+        Name: !Sub ${EnvironmentName}-${Project}-Data
+  #      BastionSG: !GetAtt StackBastion.Outputs.BastionSG
+        BusinessSG: !GetAtt StackAccessRulesBusiness.Outputs.SG
+        VPCData: !GetAtt StackVPCBusiness.Outputs.VPCID
+        AppName: !Ref Project
+      TimeoutInMinutes: 60
+  
+  

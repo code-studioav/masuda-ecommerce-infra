@@ -1,0 +1,158 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  AppName:
+    Type: String
+  Name:
+    Type: String
+  KeyPairSSM:
+    Type: String
+  NatGateway:
+    Type: String
+  PrivateRouteTable:
+    Type: String
+  PrivateSubnets:
+    Description: Specify the Private subnets no DB
+    Type: List<String>
+  VPCData:
+    Description: VPCID of data
+    Type: String
+  LatestAMI:
+    Description: Static reference to latest Amazon Linux 2 AMI
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-kernel-5.10-hvm-x86_64-gp2
+    AllowedValues:
+      - /aws/service/ami-amazon-linux-latest/amzn2-ami-kernel-5.10-hvm-x86_64-gp2
+  InstanceType:
+    Description: Instance size for the Bastion Host (default - t3.micro)
+    Type: String
+    AllowedValues:
+      - t3.micro
+    Default: t3.micro
+  SourceCidr:
+    Description: >-
+      What is the CIDR Block of IPv4 IP addresses allowed to access your Bastion
+      Host via SSH?
+    Type: String
+    AllowedPattern: >-
+      ^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(/([0-9]|[1-2][0-9]|3[0-2]))?$
+    ConstraintDescription: The value must be valid IPv4 CIDR block.
+    Default: 0.0.0.0/0
+  SshPort:
+    Description: >-
+      What port number would you like to use to connect to your Bastion Host
+      over SSH?
+    Type: Number
+    Default: 5210
+    MinValue: 22
+    MaxValue: 65535
+Resources:
+  KeyPairBastion:
+    Type: AWS::EC2::KeyPair
+    Properties: 
+      KeyName: 'bastion-key-pair'
+      KeyType: 'rsa'
+  SSMKeyPairBastion:
+    Type: 'AWS::SSM::Parameter'
+    Properties:
+      Name: !Sub '${KeyPairSSM}'
+      Tier: Standard
+      Type: String
+      Value: !Ref KeyPairBastion
+
+  BastionSG:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupName: no-ingress-sg-Ec2
+      GroupDescription: Security group with no ingress rule for ec2
+      VpcId: !Ref VPCData
+
+  BastionASG:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    Properties:
+      AutoScalingGroupName: !Join
+        - '-'
+        - - !Ref Name
+          - BastionASG
+      LaunchConfigurationName: !Ref BastionLaunchConfig
+      VPCZoneIdentifier: !Ref PrivateSubnets
+      MinSize: '1'
+      DesiredCapacity: '1'
+      MaxSize: '1'
+      Tags:
+        - Key: Name
+          Value: !Join
+            - '-'
+            - - Name
+              - BastionHost
+          PropagateAtLaunch: true
+  BastionLaunchConfig:
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      IamInstanceProfile: !GetAtt
+        - BastionInstanceProfile
+        - Arn
+      AssociatePublicIpAddress: false
+      ImageId: !Ref LatestAMI
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyPairBastion
+      SecurityGroups:
+        - !Ref BastionSG
+  SecurityGroupSshIngressRule:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Properties:
+      GroupId: !Ref BastionSG
+      IpProtocol: tcp
+      FromPort: !Ref SshPort
+      ToPort: !Ref SshPort
+      CidrIp: !Ref SourceCidr
+  BastionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: 'sts:AssumeRole'
+            Principal:
+              Service: ec2.amazonaws.com
+      Path: /
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore'
+  BastionPolicies:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyName: !Sub bastion-${AppName}-policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'ssm:UpdateInstanceInformation'
+              - 'ssmmessages:CreateControlChannel'
+              - 'ssmmessages:CreateDataChannel'
+              - 'ssmmessages:OpenControlChannel'
+              - 'ssmmessages:OpenDataChannel'
+            Resource: '*'
+          - Effect: Allow
+            Action:
+              - 's3:GetEncryptionConfiguration'
+            Resource: '*'
+      Roles:
+        - !Ref BastionRole
+  BastionInstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Path: /
+      Roles:
+        - !Ref BastionRole
+
+  BastionEI:
+    Type: 'AWS::EC2::EIP'
+    Properties:
+      Domain: vpc
+
+
+Outputs:
+  BastionSG:
+    Description: Connection endpoint for the database
+    Value: !GetAtt BastionSG.GroupId

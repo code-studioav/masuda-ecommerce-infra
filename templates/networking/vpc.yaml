@@ -1,0 +1,187 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: This template deploys a VPC
+Parameters:
+  Name:
+    Type: String
+    Description: Name to identify
+
+  VpcCIDR:
+    Description: Please enter the IP range (CIDR notation) for this VPC
+    Type: AWS::SSM::Parameter::Value<String>
+
+  PrivateSubnetACIDR:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: IP range (CIDR notation) for the private subnet in the first Availability Zone
+
+  PrivateSubnetBCIDR:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: IP range (CIDR notation) for the private subnet in the second Availability Zone
+
+  PrivateSubnetCCIDR:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: IP range (CIDR notation) for the private subnet in the second Availability Zone
+
+  PublicSubnetACIDR:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: IP range (CIDR notation) for the public subnet in the first Availability Zone
+
+#  PublicSubnetBCIDR:
+#    Type: AWS::SSM::Parameter::Value<String>
+#    Description: IP range (CIDR notation) for the public subnet in the second Availability Zone
+#
+#  PublicSubnetCCIDR:
+#    Type: AWS::SSM::Parameter::Value<String>
+#    Description: IP range (CIDR notation) for the public subnet in the second Availability Zone
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsSupport: True
+      EnableDnsHostnames: True
+      InstanceTenancy: default
+      Tags:
+      - Key: Name
+        Value: !Sub '${Name}-vpc'
+
+  #PRIVATE SUBNETS
+  PrivateSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [0, !GetAZs ]
+      CidrBlock: !Ref PrivateSubnetACIDR
+      MapPublicIpOnLaunch: false
+      Tags:
+      - Key: Name
+        Value: !Sub '${Name}-private-subnet-a'
+
+  PrivateSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [1, !GetAZs ]
+      CidrBlock: !Ref PrivateSubnetBCIDR
+      MapPublicIpOnLaunch: false
+      Tags:
+      - Key: Name
+        Value: !Sub '${Name}-private-subnet-b'
+
+  PrivateSubnetC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [2, !GetAZs ]
+      CidrBlock: !Ref PrivateSubnetCCIDR
+      MapPublicIpOnLaunch: false
+      Tags:
+      - Key: Name
+        Value: !Sub '${Name}-private-subnet-c'
+
+#PUBLIC SUBNETS
+  PublicSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      CidrBlock: !Ref PublicSubnetACIDR
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${Name} Public Subnet (AZ1)
+
+#  PublicSubnetB:
+#    Type: AWS::EC2::Subnet
+#    Properties:
+#      VpcId: !Ref VPC
+#      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+#      CidrBlock: !Ref PublicSubnetBCIDR
+#      MapPublicIpOnLaunch: true
+#      Tags:
+#        - Key: Name
+#          Value: !Sub ${Name} Public Subnet (AZ1)
+#
+#  PublicSubnetC:
+#    Type: AWS::EC2::Subnet
+#    Properties:
+#      VpcId: !Ref VPC
+#      AvailabilityZone: !Select [ 2, !GetAZs '' ]
+#      CidrBlock: !Ref PublicSubnetCCIDR
+#      MapPublicIpOnLaunch: true
+#      Tags:
+#        - Key: Name
+#          Value: !Sub ${Name} Public Subnet (AZ1)
+
+  PrivateSubnet:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/config/infra/${Name}/private_subnet"
+      Type: String
+      Value:  !Join [',',[!Ref PrivateSubnetA,!Ref PrivateSubnetB, !Ref PrivateSubnetC],]
+
+  VPCParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/config/infra/${Name}/vpc_id"
+      Type: String
+      Value: !Ref VPC
+
+Outputs:
+  VPCID:
+    Value: !Ref VPC
+
+  VPCCIDR:
+    Value: !Ref VpcCIDR
+    Description: Data VPC CIDR
+
+  PrivateSubnets:
+    Description: A list of the private subnets
+    Value:
+      !Join [',',[!Ref PrivateSubnetA,!Ref PrivateSubnetB, !Ref PrivateSubnetC],]
+    Export:
+      Name: !Sub '${AWS::StackName}-PrivateSubnets'
+
+  PublicSubnets:
+    Description: A list of the public subnets
+    Value:
+      #!Join [',',[!Ref PublicSubnetA,!Ref PublicSubnetB, !Ref PublicSubnetC],]
+      !Join [',',[!Ref PublicSubnetA],]
+    Export:
+      Name: !Sub '${AWS::StackName}-PublicSubnets'
+
+  PrivateSubnetA:
+    Description: A reference to the private subnet A Availability Zone
+    Value: !Ref PrivateSubnetA
+    Export:
+      Name: !Sub '${AWS::StackName}-PrivateSubnetA'
+
+  PrivateSubnetB:
+    Description: A reference to the private subnet B Availability Zone
+    Value: !Ref PrivateSubnetB
+    Export:
+      Name: !Sub '${AWS::StackName}-PrivateSubnetB'
+
+  PrivateSubnetC:
+    Description: A reference to the private subnet C Availability Zone
+    Value: !Ref PrivateSubnetC
+    Export:
+      Name: !Sub '${AWS::StackName}-PrivateSubnetC'
+
+  PublicSubnetA:
+    Description: A reference to the public subnet A Availability Zone
+    Value: !Ref PublicSubnetA
+    Export:
+      Name: !Sub '${AWS::StackName}-PublicSubnetA'
+
+#  PublicSubnetB:
+#    Description: A reference to the public subnet B Availability Zone
+#    Value: !Ref PublicSubnetB
+#    Export:
+#      Name: !Sub '${AWS::StackName}-PublicSubnetB'
+#
+#  PublicSubnetC:
+#    Description: A reference to the public subnet C Availability Zone
+#    Value: !Ref PublicSubnetC
+#    Export:
+#      Name: !Sub '${AWS::StackName}-PublicSubnetC'

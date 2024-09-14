@@ -1,0 +1,111 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Internet Gateway configuration infra
+Parameters:
+
+  Name:
+    Type: String
+    Description: An environment name that will be prefixed to resource names
+
+  VPCID:
+    Type: AWS::EC2::VPC::Id
+    Description: Choose which VPC the security groups should be deployed to
+
+  PublicSubnetA:
+    Type: String
+    Description: Public SubnetId in AZ A
+
+#  PublicSubnetB:
+#    Type: String
+#    Description: Public SubnetId in AZ B
+#
+#  PublicSubnetC:
+#    Type: String
+#    Description: Public SubnetId in AZ C
+
+Resources:
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub ${Name}-ig
+
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPCID
+
+  ElasticIPA:
+    Type: AWS::EC2::EIP
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Sub ${Name}-eip-a
+
+#  ElasticIPB:
+#    Type: AWS::EC2::EIP
+#    DependsOn: InternetGatewayAttachment
+#    Properties:
+#      Domain: vpc
+#      Tags:
+#        - Key: Name
+#          Value: !Sub ${Name}-eip-b
+#
+#  ElasticIPC:
+#    Type: AWS::EC2::EIP
+#    DependsOn: InternetGatewayAttachment
+#    Properties:
+#      Domain: vpc
+#      Tags:
+#        - Key: Name
+#          Value: !Sub ${Name}-eip-c
+
+  NatGatewayA:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt ElasticIPA.AllocationId
+      SubnetId: !Ref PublicSubnetA
+      Tags:
+        - Key: Name
+          Value: !Sub ${Name}-nat-a
+
+#  NatGatewayB:
+#    Type: AWS::EC2::NatGateway
+#    Properties:
+#      AllocationId: !GetAtt ElasticIPB.AllocationId
+#      SubnetId: !Ref PublicSubnetB
+#      Tags:
+#        - Key: Name
+#          Value: !Sub ${Name}-nat-b
+#
+#  NatGatewayC:
+#    Type: AWS::EC2::NatGateway
+#    Properties:
+#      AllocationId: !GetAtt ElasticIPC.AllocationId
+#      SubnetId: !Ref PublicSubnetC
+#      Tags:
+#        - Key: Name
+#          Value: !Sub ${Name}-nat-c
+
+Outputs:
+  InternetGateway:
+    Value: !Ref InternetGateway
+
+  NatGatewayA:
+    Value: !Ref NatGatewayA
+
+#  NatGatewayB:
+#    Value: !Ref NatGatewayB
+#
+#  NatGatewayC:
+#    Value: !Ref NatGatewayC
+#
+#  NatGateway:
+#    Value: !Join
+#      - ','
+#      - - NatGatewayA
+#        - NatGatewayB
+#        - NatGatewayC
