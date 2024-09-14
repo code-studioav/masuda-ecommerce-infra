@@ -18,9 +18,13 @@ jobs:
     outputs:
       app_name: ${{ steps.set-variables.outputs.app_name }}
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
       - id: set-variables
         name: Set project properties variables
         run: |
+          npm install
           echo "::set-output name=app_name::$(bash read_from_properties.sh ./project_properties.toml project.definition.name)"
   deploy-pipeline:
     name: Deploy dev pipeline
