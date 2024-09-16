@@ -225,7 +225,7 @@ Resources:
             -
               Type: AWS::S3::Object
               Values:
-                - !Join [ '', [ !GetAtt S3CodePipelineArtifactStore.Arn, '/', !Sub 'deploys/networking-db/infra/${PrincipalTemplateZip}' ] ]
+                - !Join [ '', [ !GetAtt S3CodePipelineArtifactStore.Arn, '/', !Sub '${AppName}/deploys/networking-db/infra/${PrincipalTemplateZip}' ] ]
           ReadWriteType: WriteOnly
           IncludeManagementEvents: false
       IncludeGlobalServiceEvents: true
