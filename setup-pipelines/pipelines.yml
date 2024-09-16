@@ -271,6 +271,7 @@ Resources:
                 Action:
                   - cloudformation:CreateStack
                   - cloudformation:CreateChangeSet
+                Resource: '*'
               - Effect: Allow
                 Resource: 'arn:aws:s3:::*'
                 Action:
