@@ -313,7 +313,7 @@ Resources:
   SSMBucketArtifacts:
     Type: 'AWS::SSM::Parameter'
     Properties:
-      Name: !Sub '/config/${EnvironmentName}/infra/bucket/artifacts'
+      Name: !Sub '/config/${EnvironmentName}/${AppName}/infra/bucket/artifacts'
       Tier: Standard
       Type: String
       Value: !Ref S3CodePipelineArtifactStore
