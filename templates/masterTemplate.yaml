@@ -5,7 +5,7 @@ Parameters:
     Type: String
     Description: Environment of the account.
   AppName:
-    Type: String
+    Type: AWS::SSM::Parameter::Value<String>
     Description: App Name.
 Resources:
   StackVPCBusiness:
