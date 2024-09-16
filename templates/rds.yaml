@@ -116,7 +116,7 @@ Resources:
         - DBClassType
         - !Ref Environment
       Engine: postgres
-      EngineVersion: "13.10"
+      EngineVersion: "16.4"
       MasterUsername: !Ref DBUsername
       MasterUserPassword: !Sub '{{resolve:secretsmanager:${DBPassword}:SecretString:password::}}'
       Tags:
