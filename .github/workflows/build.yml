@@ -70,7 +70,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{env.AWS_ROLE_TO_ASSUME}}
-          role-session-name: $APP_NAME-networking-infra-deploy
+          role-session-name: networking-infra-deploy
           aws-region: ${{env.AWS_REGION}}
       - name:  Upload templates to AWS
         run: |
