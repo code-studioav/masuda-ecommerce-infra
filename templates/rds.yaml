@@ -12,8 +12,6 @@ Parameters:
       - prod
   Name:
     Type: String
-  Project:
-    Type: String
 
   PrivateSubnets:
     Description: Specify the Private subnets DB

@@ -8,7 +8,7 @@ Parameters:
       - qa
       - staging
       - prod
-  Project:
+  AppName:
     Type: String
 
 Mappings:
@@ -54,7 +54,7 @@ Resources:
   SSMVpcBusinessCidr:
     Type: 'AWS::SSM::Parameter'
     Properties:
-      Name: !Sub '/config/infra/${Project}/vpc-business/cidr'
+      Name: !Sub '/config/infra/${AppName}/vpc-business/cidr'
       Tier: Standard
       Type: String
       Value:
@@ -65,7 +65,7 @@ Resources:
   SSMCidrBusinessPrivateSubnetA:
     Type: 'AWS::SSM::Parameter'
     Properties:
-      Name: !Sub '/config/infra/${Project}/vpc-business/cidr-private-subnet-a'
+      Name: !Sub '/config/infra/${AppName}/vpc-business/cidr-private-subnet-a'
       Tier: Standard
       Type: String
       Value:
@@ -76,7 +76,7 @@ Resources:
   SSMCidrBusinessPrivateSubnetB:
     Type: 'AWS::SSM::Parameter'
     Properties:
-      Name: !Sub '/config/infra/${Project}/vpc-business/cidr-private-subnet-b'
+      Name: !Sub '/config/infra/${AppName}/vpc-business/cidr-private-subnet-b'
       Tier: Standard
       Type: String
       Value:
@@ -87,7 +87,7 @@ Resources:
   SSMCidrBusinessPrivateSubnetC:
     Type: 'AWS::SSM::Parameter'
     Properties:
-      Name: !Sub '/config/infra/${Project}/vpc-business/cidr-private-subnet-c'
+      Name: !Sub '/config/infra/${AppName}/vpc-business/cidr-private-subnet-c'
       Tier: Standard
       Type: String
       Value:
@@ -98,7 +98,7 @@ Resources:
   SSMCidrBusinessPublicSubnetA:
     Type: 'AWS::SSM::Parameter'
     Properties:
-      Name: !Sub '/config/infra/${Project}/vpc-business/cidr-public-subnet-a'
+      Name: !Sub '/config/infra/${AppName}/vpc-business/cidr-public-subnet-a'
       Tier: Standard
       Type: String
       Value:
@@ -109,7 +109,7 @@ Resources:
   SSMCidrBusinessPublicSubnetB:
     Type: 'AWS::SSM::Parameter'
     Properties:
-      Name: !Sub '/config/infra/${Project}/vpc-business/cidr-public-subnet-b'
+      Name: !Sub '/config/infra/${AppName}/vpc-business/cidr-public-subnet-b'
       Tier: Standard
       Type: String
       Value:
@@ -120,7 +120,7 @@ Resources:
   SSMCidrBusinessPublicSubnetC:
     Type: 'AWS::SSM::Parameter'
     Properties:
-      Name: !Sub '/config/infra/${Project}/vpc-business/cidr-public-subnet-c'
+      Name: !Sub '/config/infra/${AppName}/vpc-business/cidr-public-subnet-c'
       Tier: Standard
       Type: String
       Value:
