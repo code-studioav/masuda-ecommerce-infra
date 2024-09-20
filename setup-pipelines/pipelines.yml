@@ -76,9 +76,12 @@ Parameters:
     Description: Port for the database access.
     Default: '5432'
   EC2CreateBastion:
-    Type: Boolean
+    Type: String
     Description: Whether to create a bastion host for EC2 instances.
-    Default: false
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
   Ec2ImageName:
     Type: String
     Description: Name of the Amazon Machine Image (AMI) to use for EC2 instances.
