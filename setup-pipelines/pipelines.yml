@@ -37,7 +37,7 @@ Parameters:
   VpcNamesForPrivate:
     Type: String
     Description: Comma delimited list for names of private subnets
-    Default: 'A, B, C'
+    Default: 'A,B,C'
   VpcNamesForPublic:
     Type: String
     Description: Comma delimited list for names of public subnets

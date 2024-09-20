@@ -22,7 +22,7 @@ Parameters:
   VpcNamesForPrivate:
     Type: CommaDelimitedList
     Description: List for names of private subnets
-    Default: 'A, B, C'
+    Default: 'A,B,C'
   VpcNamesForPublic:
     Type: CommaDelimitedList
     Description: List for names of public subnets
