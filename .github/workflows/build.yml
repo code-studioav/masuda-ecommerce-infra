@@ -16,16 +16,59 @@ jobs:
     name: "Set Environment"
     runs-on: ubuntu-latest
     outputs:
-      app_name: ${{ steps.set-appname.outputs.app_name }}
+      app_name: ${{ steps.set-properties-variables.outputs.app_name }}
+      description: ${{ steps.set-properties-variables.outputs.description }}
+
+      vpc_cidr: ${{ steps.set-properties-variables.outputs.vpc_cidr }}
+      vpc_mask_for_private: ${{ steps.set-properties-variables.outputs.vpc_mask_for_private }}
+      vpc_mask_for_public: ${{ steps.set-properties-variables.outputs.vpc_mask_for_public }}
+      vpc_names_for_private: ${{ steps.set-properties-variables.outputs.vpc_names_for_private }}
+      vpc_names_for_public: ${{ steps.set-properties-variables.outputs.vpc_names_for_public }}
+
+      rds_instance_class: ${{ steps.set-properties-variables.outputs.rds_instance_class }}
+      rds_store_gib: ${{ steps.set-properties-variables.outputs.rds_store_gib }}
+      rds_engine: ${{ steps.set-properties-variables.outputs.rds_engine }}
+      rds_version: ${{ steps.set-properties-variables.outputs.rds_version }}
+      
+      db_name: ${{ steps.set-properties-variables.outputs.db_name }}
+      db_user_name: ${{ steps.set-properties-variables.outputs.db_user_name }}
+      db_port: ${{ steps.set-properties-variables.outputs.db_port }}
+      
+      ec2_create_bastion: ${{ steps.set-properties-variables.outputs.ec2_create_bastion }}
+      ec2_image_name: ${{ steps.set-properties-variables.outputs.ec2_image_name }}
+      ec2_instance_type: ${{ steps.set-properties-variables.outputs.ec2_instance_type }}
+      ec2_ssh_port: ${{ steps.set-properties-variables.outputs.ec2_ssh_port }}
+
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - id: set-appname
+      - id: set-properties-variables
         name: Set project properties variables
         run: |
           npm install
           echo "::set-output name=app_name::$(bash read_from_properties.sh ./project_properties.toml project.definition.name)"
+          echo "::set-output name=description::$(bash read_from_properties.sh ./project_properties.toml project.definition.description)"
+          
+          echo "::set-output name=vpc_cidr::$(bash read_from_properties.sh ./project_properties.toml networking.config.vpc.cidr)"
+          echo "::set-output name=vpc_mask_for_private::$(bash read_from_properties.sh ./project_properties.toml networking.config.vpc.mask_for_private)"
+          echo "::set-output name=vpc_mask_for_public::$(bash read_from_properties.sh ./project_properties.toml networking.config.vpc.mask_for_public)"
+          echo "::set-output name=vpc_names_for_private::$(bash read_from_properties.sh ./project_properties.toml networking.config.vpc.names_for_private)"
+          echo "::set-output name=vpc_names_for_public::$(bash read_from_properties.sh ./project_properties.toml networking.config.vpc.names_for_public)"
+
+          echo "::set-output name=rds_instance_class::$(bash read_from_properties.sh ./project_properties.toml rds.database.instance_class)"
+          echo "::set-output name=rds_store_gib::$(bash read_from_properties.sh ./project_properties.toml rds.database.store_gib)"
+          echo "::set-output name=rds_engine::$(bash read_from_properties.sh ./project_properties.toml rds.database.engine)"
+          echo "::set-output name=rds_version::$(bash read_from_properties.sh ./project_properties.toml rds.database.version)"
+          
+          echo "::set-output name=db_name::$(bash read_from_properties.sh ./project_properties.toml rds.database.config.db_name)"
+          echo "::set-output name=db_user_name::$(bash read_from_properties.sh ./project_properties.toml rds.database.config.db_user_name)"
+          echo "::set-output name=db_port::$(bash read_from_properties.sh ./project_properties.toml rds.database.config.db_port)"
+
+          echo "::set-output name=ec2_create_bastion::$(bash read_from_properties.sh ./project_properties.toml ec2.bastion.create_bastion)"
+          echo "::set-output name=ec2_image_name::$(bash read_from_properties.sh ./project_properties.toml ec2.bastion.image_name)"
+          echo "::set-output name=ec2_instance_type::$(bash read_from_properties.sh ./project_properties.toml ec2.bastion.instance_type)"
+          echo "::set-output name=ec2_ssh_port::$(bash read_from_properties.sh ./project_properties.toml ec2.bastion.ssh_port)"
   deploy-pipeline:
     name: Deploy ${{ inputs.environment }} pipeline
     environment: ${{ inputs.environment }}
@@ -35,7 +78,24 @@ jobs:
       ENVIRONMENT: ${{ inputs.environment }}
       AWS_ROLE_TO_ASSUME: ${{ secrets.AWS_ROLE_TO_ASSUME }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
+
       APP_NAME: ${{ needs.set-variables.outputs.app_name }}
+      VPC_CIDR: ${{ needs.set-variables.outputs.vpc_cidr }}
+      VPC_MASK_FOR_PRIVATE: ${{ needs.set-variables.outputs.vpc_mask_for_private }}
+      VPC_MASK_FOR_PUBLIC: ${{ needs.set-variables.outputs.vpc_mask_for_public }}
+      VPC_NAMES_FOR_PRIVATE: ${{ needs.set-variables.outputs.vpc_names_for_private }}
+      VPC_NAMES_FOR_PUBLIC: ${{ needs.set-variables.outputs.vpc_names_for_public }}
+      RDS_INSTANCE_CLASS: ${{ needs.set-variables.outputs.rds_instance_class }}
+      RDS_STORE_GIB: ${{ needs.set-variables.outputs.rds_store_gib }}
+      RDS_ENGINE: ${{ needs.set-variables.outputs.rds_engine }}
+      RDS_VERSION: ${{ needs.set-variables.outputs.rds_version }}
+      DB_NAME: ${{ needs.set-variables.outputs.db_name }}
+      DB_USER_NAME: ${{ needs.set-variables.outputs.db_user_name }}
+      DB_PORT: ${{ needs.set-variables.outputs.db_port }}
+      EC2_CREATE_BASTION: ${{ needs.set-variables.outputs.ec2_create_bastion }}
+      EC2_IMAGE_NAME: ${{ needs.set-variables.outputs.ec2_image_name }}
+      EC2_INSTANCE_TYPE: ${{ needs.set-variables.outputs.ec2_instance_type }}
+      EC2_SSH_PORT: ${{ needs.set-variables.outputs.ec2_ssh_port }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -49,7 +109,11 @@ jobs:
       - name:  Setup Parameters 
         run: |
           aws cloudformation deploy --template-file ./setup-pipelines/vpcParameters.yml --stack-name $APP_NAME-ssm-infrastructure-$ENVIRONMENT --parameter-overrides EnvironmentName=$ENVIRONMENT AppName=$APP_NAME --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
-          aws cloudformation deploy --template-file ./setup-pipelines/pipelines.yml --stack-name $APP_NAME-pipeline-infrastructure-$ENVIRONMENT --parameter-overrides EnvironmentName=$ENVIRONMENT AppName=$APP_NAME --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
+          aws cloudformation deploy --template-file ./setup-pipelines/pipelines.yml --stack-name $APP_NAME-pipeline-infrastructure-$ENVIRONMENT --parameter-overrides EnvironmentName=$ENVIRONMENT AppName=$APP_NAME \
+                                    RdsInstanceClass=$RDS_INSTANCE_CLASS RdsStorageGib=$RDS_STORE_GIB RdsEngine=$RDS_ENGINE RdsVersion=$RDS_VERSION DbName=$DB_NAME DbUserName=$DB_USER_NAME DbPort=$DB_PORT \
+                                    Ec2CreateBastion=$EC2_CREATE_BASTION Ec2ImageName=$EC2_IMAGE_NAME Ec2InstanceType=$EC2_INSTANCE_TYPE Ec2SshPort=$EC2_SSH_PORT \
+                                    VpcCidr=$VPC_CIDR VpcMaskForPrivate=$VPC_MASK_FOR_PRIVATE VpcMaskForPublic=$VPC_MASK_FOR_PUBLIC VpcNamesForPrivate=$VPC_NAMES_FOR_PRIVATE VpcNamesForPublic=$VPC_NAMES_FOR_PUBLIC \
+                                    --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
 
   deploy:
     name: Deploy ${{ inputs.environment }} AWS
@@ -62,6 +126,7 @@ jobs:
       AWS_ROLE_TO_ASSUME: ${{ secrets.AWS_ROLE_TO_ASSUME }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
       APP_NAME: ${{ needs.set-variables.outputs.app_name }}
+
     steps:
       - uses: actions/checkout@v4
         with:

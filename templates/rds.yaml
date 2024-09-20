@@ -25,37 +25,43 @@ Parameters:
 
   VPCData:
     Type: AWS::EC2::VPC::Id
-
-  DBUsername:
-    NoEcho: 'true'
-    Description: Username for PostgreSQL database access
+  
+  AppName:
     Type: String
+    Description: The project name.
+  RdsInstanceClass:
+    Type: String
+    Description: Name of the instance of Rds. See allowed values at https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.Types.html
+    Default: 'db.t3.micro'
+  RdsStorageGib:
+    Type: Number
+    Description: Storage size in Gib.
+    Default: 20
+  RdsEngine:
+    Type: String
+    Description: Name of the databases engine. See allowed values at https://docs.aws.amazon.com/cli/latest/reference/rds/describe-db-engine-versions.html
+    Default: 'postgres'
+  RdsVersion:
+    Type: String
+    Description: Version of the database engine
+    Default: '16.4'
+  DbName:
+    Type: String
+    Description: Name of the database to create.
+    Default: 'generic_db'
+  DbUserName:
+    Type: String
+    Description: Username for the database access.
+    NoEcho: 'true'
     MinLength: '1'
     MaxLength: '16'
     AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
     ConstraintDescription: Must begin with a letter and contain only alphanumeric characters
     Default: 'dbadminUser'
-  DBName:
-    Type: String
-    Default: generic_db
-  DBPort:
-    Type: String
-    Default: '5432'
-  AppName:
-    Type: String
-    Description: The project name.
-Mappings:
-  EnvAttrs:
-    DBClassType:
-      dev: db.t3.micro
-      qa: db.t3.micro
-      staging: db.t3.micro
-      prod: db.t3.micro
-    GibStorage:
-      dev: '20'
-      qa: '50'
-      staging: '20'
-      prod: '100'
+  DbPort:
+    Type: Number
+    Description: Port for the database access.
+    Default: 5432
 Conditions:
   ProdEnv: !Equals
     - !Ref Environment
@@ -90,7 +96,7 @@ Resources:
         ExcludeCharacters: ' %+~`#$&*()|[]{}:;<>?!''/@"\=^,'
         GenerateStringKey: password
         PasswordLength: 30
-        SecretStringTemplate: !Sub '{"username":"${DBUsername}"}'
+        SecretStringTemplate: !Sub '{"username":"${DbUserName}"}'
   DBSubnetGroup:
     Type: 'AWS::RDS::DBSubnetGroup'
     Properties:
@@ -107,23 +113,15 @@ Resources:
       DBSubnetGroupName: !Ref DBSubnetGroup
       VPCSecurityGroups:
         - !GetAtt SGDBnoIngress.GroupId
-      AllocatedStorage: !FindInMap
-        - EnvAttrs
-        - GibStorage
-        - !Ref Environment
-      DBInstanceClass: !FindInMap
-        - EnvAttrs
-        - DBClassType
-        - !Ref Environment
-      Engine: postgres
-      EngineVersion: "16.4"
-      MasterUsername: !Ref DBUsername
+      AllocatedStorage: !Ref RdsStorageGib
+      DBInstanceClass: !Ref RdsInstanceClass
+      Engine: !Ref RdsEngine
+      EngineVersion: !Ref RdsVersion
+      MasterUsername: !Ref DbUserName
       MasterUserPassword: !Sub '{{resolve:secretsmanager:${DBPassword}:SecretString:password::}}'
       Tags:
         - Key: Name
           Value: !Sub '${Name}-rds'
-      EnableCloudwatchLogsExports:
-        - postgresql
       BackupRetentionPeriod: 35
       EnablePerformanceInsights: !If [IsProd, true, false]
       MonitoringInterval: 60
@@ -145,11 +143,11 @@ Resources:
       Type: String
       Value: !Sub |
           {
-            "db-name": "${DBName}",
-            "db-user": "${DBUsername}",
+            "db-name": "${DbName}",
+            "db-user": "${DbUserName}",
             "db-password": "${DBPassword}",
             "db-host": "${DBInstance.Endpoint.Address}",
-            "db-port": "${DBPort}"
+            "db-port": "${DbPort}"
           }
   SGDBnoIngress:
     Type: 'AWS::EC2::SecurityGroup'
@@ -158,10 +156,10 @@ Resources:
       GroupDescription: Security group to allow access from
       VpcId: !Ref VPCData
       SecurityGroupIngress:
-        - FromPort: 5432
+        - FromPort: !Ref DbPort
           IpProtocol: tcp
           SourceSecurityGroupId: !Ref BusinessSG
-          ToPort: 5432
+          ToPort: !Ref DbPort
   #      - FromPort: 5432
   #        IpProtocol: tcp
   #        SourceSecurityGroupId: !Ref BastionSG

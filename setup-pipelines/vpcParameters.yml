@@ -10,6 +10,26 @@ Parameters:
       - prod
   AppName:
     Type: String
+  VpcCidr:
+    Type: String
+    Description: Network subnet for routing
+    Default: '10.61.0.0/16'
+  VpcMaskForPrivate:
+    Type: String
+    Description: Mask to apply to IPs at private subnets
+    Default: '/24'
+  VpcMaskForPublic:
+    Type: String
+    Description: Mask to apply to IPs at public subnets
+    Default: '/24'
+  VpcNamesForPrivate:
+    Type: CommaDelimitedList
+    Description: List for names of private subnets
+    Default: 'A,B,C'
+  VpcNamesForPublic:
+    Type: CommaDelimitedList
+    Description: List for names of public subnets
+    Default: 'A'
 
 Mappings:
   EnvironMap:

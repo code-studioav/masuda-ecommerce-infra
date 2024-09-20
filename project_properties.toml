@@ -1,3 +1,27 @@
 [project.definition]
 name = "my-awesome-project"
 description = "Awesome project to deploy a full RDS network infra using cloudformation"
+
+[networking.config.vpc]
+cidr = "10.61.0.0/16"
+mask_for_private = "/24"
+mask_for_public = "/24"
+names_for_private = 'A,B,C' # Use comma delimeter to separate names. Use max 3 elements
+names_for_public = 'A' #  Use comma delimeter to separate names. Use max 3 elements
+
+[rds.database]
+instance_class = "db.t3.micro"
+store_gib = "20"
+engine = "postgres"
+version = "16.4"
+
+[rds.database.config]
+db_name = "my_awesome_db"
+db_user_name = "awesomeAdminUser"
+db_port = "5432"
+
+[ec2.bastion]
+create_bastion = true
+image_name = "/aws/service/ami-amazon-linux-latest/amzn2-ami-kernel-5.10-hvm-x86_64-gp2"
+instance_type = "t3.micro"
+ssh_port = 5210

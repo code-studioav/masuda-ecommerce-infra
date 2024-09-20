@@ -7,6 +7,75 @@ Parameters:
   AppName:
     Type: AWS::SSM::Parameter::Value<String>
     Description: App Name.
+  VpcCidr:
+    Type: String
+    Description: Network subnet for routing
+    Default: '10.61.0.0/16'
+  VpcMaskForPrivate:
+    Type: String
+    Description: Mask to apply to IPs at private subnets
+    Default: '/24'
+  VpcMaskForPublic:
+    Type: String
+    Description: Mask to apply to IPs at public subnets
+    Default: '/24'
+  VpcNamesForPrivate:
+    Type: CommaDelimitedList
+    Description: List for names of private subnets
+    Default: 'A,B,C'
+  VpcNamesForPublic:
+    Type: CommaDelimitedList
+    Description: List for names of public subnets
+    Default: 'A'
+  RdsInstanceClass:
+    Type: String
+    Description: Name of the instance of Rds. See allowed values at https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.Types.html
+    Default: 'db.t3.micro'
+  RdsStorageGib:
+    Type: Number
+    Description: Storage size in Gib.
+    Default: 20
+  RdsEngine:
+    Type: String
+    Description: Name of the databases engine. See allowed values at https://docs.aws.amazon.com/cli/latest/reference/rds/describe-db-engine-versions.html
+    Default: 'postgres'
+  RdsVersion:
+    Type: String
+    Description: Version of the database engine
+    Default: '16.4'
+  DBName:
+    Type: String
+    Description: Name of the database to create.
+    Default: 'generic_db'
+  DbUserName:
+    Type: String
+    Description: Username for the database access.
+    NoEcho: 'true'
+    MinLength: '1'
+    MaxLength: '16'
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: Must begin with a letter and contain only alphanumeric characters
+    Default: 'dbadminUser'
+  DbPort:
+    Type: String
+    Description: Port for the database access.
+    Default: '5432'
+  EC2CreateBastion:
+    Type: Boolean
+    Description: Whether to create a bastion host for EC2 instances.
+    Default: false
+  Ec2ImageName:
+    Type: String
+    Description: Name of the Amazon Machine Image (AMI) to use for EC2 instances.
+    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-kernel-5.10-hvm-x86_64-gp2'
+  Ec2InstanceType:
+    Type: String
+    Description: Type of the Amazon EC2 instance to use for EC2 instances. Allowed values at https://aws.amazon.com/es/ec2/instance-types/
+    Default: 't3.micro'
+  Ec2SshPort:
+    Type: Integer
+    Description: SSH port for the EC2 instances.
+    Default: 22
 Resources:
   StackVPCBusiness:
     Type: AWS::CloudFormation::Stack
@@ -86,7 +155,14 @@ Resources:
   #      BastionSG: !GetAtt StackBastion.Outputs.BastionSG
         BusinessSG: !GetAtt StackAccessRulesBusiness.Outputs.SG
         VPCData: !GetAtt StackVPCBusiness.Outputs.VPCID
-        AppName: !Ref AppName
+
+        RdsInstanceClass: !Ref RdsInstanceClass
+        RdsStorageGib: !Ref RdsStorageGib
+        RdsEngine: !Ref RdsEngine
+        RdsVersion: !Ref RdsVersion
+        DBName: !Ref DBName
+        DbUserName: !Ref DbUserName
+        DbPort: !Ref DbPort
       TimeoutInMinutes: 60
   
   
