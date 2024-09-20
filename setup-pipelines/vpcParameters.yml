@@ -42,7 +42,7 @@ Resources:
           Tier: Standard
           Type: String
           Value: !Ref SubnetName
-  'Fn::ForEach::PublicSubnets'
+  'Fn::ForEach::PublicSubnets':
     - SubnetName
     - !Ref VpcNamesForPublic
     - 'SSMCidrBusinessPublicSubnet${SubnetName}':
