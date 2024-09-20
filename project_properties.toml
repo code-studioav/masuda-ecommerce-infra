@@ -7,7 +7,7 @@ cidr = "10.61.0.0/16"
 mask_for_private = "/24"
 mask_for_public = "/24"
 names_for_private = 'A,B,C' # Use comma delimeter to separate names. Use max 3 elements
-names_for_public = 'A' #  Use comma delimeter to separate names. Use max 3 elements
+names_for_public = 'A,' #  Use comma delimeter to separate names. Use max 3 elements
 
 [rds.database]
 instance_class = "db.t3.micro"
