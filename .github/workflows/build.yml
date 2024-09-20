@@ -109,13 +109,13 @@ jobs:
       - name:  Setup Parameters 
         run: |
           aws cloudformation deploy --template-file ./setup-pipelines/vpcParameters.yml --stack-name $APP_NAME-ssm-infrastructure-$ENVIRONMENT --parameter-overrides EnvironmentName=$ENVIRONMENT AppName=$APP_NAME \
-                                    VpcCidr=$VPC_CIDR VpcNamesForPrivate=$VPC_NAMES_FOR_PRIVATE VpcNamesForPublic=$VPC_NAMES_FOR_PUBLIC \
+                                    VpcCidr="$VPC_CIDR" VpcNamesForPrivate="$VPC_NAMES_FOR_PRIVATE" VpcNamesForPublic="$VPC_NAMES_FOR_PUBLIC" \
                                     --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
           
           aws cloudformation deploy --template-file ./setup-pipelines/pipelines.yml --stack-name $APP_NAME-pipeline-infrastructure-$ENVIRONMENT --parameter-overrides EnvironmentName=$ENVIRONMENT AppName=$APP_NAME \
                                     RdsInstanceClass=$RDS_INSTANCE_CLASS RdsStorageGib=$RDS_STORE_GIB RdsEngine=$RDS_ENGINE RdsVersion=$RDS_VERSION DbName=$DB_NAME DbUserName=$DB_USER_NAME DbPort=$DB_PORT \
                                     Ec2CreateBastion=$EC2_CREATE_BASTION Ec2ImageName=$EC2_IMAGE_NAME Ec2InstanceType=$EC2_INSTANCE_TYPE Ec2SshPort=$EC2_SSH_PORT \
-                                    VpcCidr=$VPC_CIDR VpcMaskForPrivate=$VPC_MASK_FOR_PRIVATE VpcMaskForPublic=$VPC_MASK_FOR_PUBLIC VpcNamesForPrivate=$VPC_NAMES_FOR_PRIVATE VpcNamesForPublic=$VPC_NAMES_FOR_PUBLIC \
+                                    VpcCidr="$VPC_CIDR" VpcMaskForPrivate=$VPC_MASK_FOR_PRIVATE VpcMaskForPublic=$VPC_MASK_FOR_PUBLIC VpcNamesForPrivate="$VPC_NAMES_FOR_PRIVATE" VpcNamesForPublic="$VPC_NAMES_FOR_PUBLIC" \
                                     --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
 
   #deploy:
