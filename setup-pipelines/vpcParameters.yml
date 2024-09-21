@@ -23,7 +23,14 @@ Parameters:
     Type: CommaDelimitedList
     Description: List for names of public subnets
     Default: 'A'
-
+  VpcMaskForPrivate:
+    Type: String
+    Description: Mask to apply to private subnets
+    Default: '/24'
+  VpcMaskForPublic:
+    Type: String
+    Description: Mask to apply to public subnets
+    Default: '/24'
 Mappings:
   PrivateSubnetMap:
     A:
@@ -57,10 +64,13 @@ Resources:
           Name: !Sub '/config/infra/${AppName}/vpc-business/cidr-private-subnet/${SubnetName}'
           Tier: Standard
           Type: String
-          Value: !FindInMap 
-            - PrivateSubnetMap
-            - !Ref SubnetName
-            - CidrIp
+          Value: !Sub
+            - '${BaseIp}${Mask}'
+            - BaseIp: !FindInMap 
+              - PrivateSubnetMap
+              - !Ref SubnetName
+              - CidrIp
+            - Mask: !Ref VpcMaskForPrivate
   'Fn::ForEach::PublicSubnets':
     - SubnetName
     - !Ref VpcNamesForPublic
@@ -70,8 +80,11 @@ Resources:
           Name: !Sub '/config/infra/${AppName}/vpc-business/cidr-public-subnet/${SubnetName}'
           Tier: Standard
           Type: String
-          Value: !FindInMap 
-            - PublicSubnetMap
-            - !Ref SubnetName
-            - CidrIp
+          Value: !Sub
+            - '${BaseIp}${Mask}'
+            - BaseIp: !FindInMap 
+              - PublicSubnetMap
+              - !Ref SubnetName
+              - CidrIp
+            - Mask: !Ref VpcMaskForPublic
   
