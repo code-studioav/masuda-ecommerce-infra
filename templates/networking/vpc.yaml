@@ -53,7 +53,7 @@ Resources:
               - !Ref SubnetName
               - Index
             - !GetAZs
-          CidrBlock: !Sub '{{resolve:ssm:/config/infra/${AppName}/vpc-business/cidr-private-subnet/${SubnetName}}}'
+          CidrBlock: !Sub '{{resolve:ssm:/config/infra/${AppName}/vpc-networking/cidr-private-subnet/${SubnetName}}}'
           MapPublicIpOnLaunch: false
           Tags:
           - Key: Name
@@ -88,7 +88,7 @@ Resources:
               - !Ref SubnetName
               - Index
             - !GetAZs
-          CidrBlock: !Sub '{{resolve:ssm:/config/infra/${AppName}/vpc-business/cidr-public-subnet/${SubnetName}}}'
+          CidrBlock: !Sub '{{resolve:ssm:/config/infra/${AppName}/vpc-networking/cidr-public-subnet/${SubnetName}}}'
           MapPublicIpOnLaunch: true
           Tags:
           - Key: Name

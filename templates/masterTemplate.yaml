@@ -86,7 +86,7 @@ Resources:
       TemplateURL: !Sub 'https://{{resolve:ssm:/config/${EnvironmentName}/${AppName}/infra/bucket/artifacts}}.s3.${AWS::URLSuffix}/${AppName}/deploys/networking-db/infra/networking/vpc.yaml'
       Parameters:
         Name: !Sub ${EnvironmentName}-${AppName}-network
-        VpcCIDR: !Sub /config/infra/${AppName}/vpc-business/cidr
+        VpcCIDR: !Sub /config/infra/${AppName}/vpc-networking/cidr
         PrivateSubnets: !Ref VpcNamesForPrivate
         PublicSubnets: !Ref VpcNamesForPublic
       TimeoutInMinutes: 60
@@ -99,7 +99,7 @@ Resources:
         VPCID: !GetAtt StackVPCNetwork.Outputs.VPCID
         PublicSubnets: !Ref VpcNamesForPublic
       TimeoutInMinutes: 60
-  StackAccessRulesBusiness:
+  StackAccessNetworkRules:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub 'https://{{resolve:ssm:/config/${EnvironmentName}/${AppName}/infra/bucket/artifacts}}.s3.${AWS::URLSuffix}/${AppName}/deploys/networking-db/infra/networking/access-rules.yaml'
@@ -129,7 +129,7 @@ Resources:
   #      AppName: !Ref AppName
   #      Name: !Sub ${EnvironmentName}-${AppName}-Business
   #      NatGateway: !GetAtt StackNatIG.Outputs.NatGateway
-  #      PrivateRouteTable: !GetAtt StackAccessRulesBusiness.Outputs.PrivateRouteTable
+  #      PrivateRouteTable: !GetAtt StackAccessNetworkRules.Outputs.PrivateRouteTable
   #      PrivateSubnets: !Join
   #        - ','
   #        - - !GetAtt StackVPCNetwork.Outputs.PrivateSubnetA
@@ -150,7 +150,7 @@ Resources:
         AppName: !Ref AppName
         Name: !Sub ${EnvironmentName}-${AppName}-Data
   #      BastionSG: !GetAtt StackBastion.Outputs.BastionSG
-        BusinessSG: !GetAtt StackAccessRulesBusiness.Outputs.SG
+        BusinessSG: !GetAtt StackAccessNetworkRules.Outputs.SG
         VPCData: !GetAtt StackVPCNetwork.Outputs.VPCID
 
         RdsInstanceClass: !Ref RdsInstanceClass

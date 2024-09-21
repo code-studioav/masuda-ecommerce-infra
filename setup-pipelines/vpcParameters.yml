@@ -51,7 +51,7 @@ Resources:
   SSMVpcBusinessCidr:
     Type: 'AWS::SSM::Parameter'
     Properties:
-      Name: !Sub '/config/infra/${AppName}/vpc-business/cidr'
+      Name: !Sub '/config/infra/${AppName}/vpc-networking/cidr'
       Tier: Standard
       Type: String
       Value: !Ref VpcCidr
@@ -61,7 +61,7 @@ Resources:
     - 'SSMCidrBusinessPrivateSubnet${SubnetName}':
         Type: 'AWS::SSM::Parameter'
         Properties:
-          Name: !Sub '/config/infra/${AppName}/vpc-business/cidr-private-subnet/${SubnetName}'
+          Name: !Sub '/config/infra/${AppName}/vpc-networking/cidr-private-subnet/${SubnetName}'
           Tier: Standard
           Type: String
           Value: !Sub
@@ -77,7 +77,7 @@ Resources:
     - 'SSMCidrBusinessPublicSubnet${SubnetName}':
         Type: 'AWS::SSM::Parameter'
         Properties:
-          Name: !Sub '/config/infra/${AppName}/vpc-business/cidr-public-subnet/${SubnetName}'
+          Name: !Sub '/config/infra/${AppName}/vpc-networking/cidr-public-subnet/${SubnetName}'
           Tier: Standard
           Type: String
           Value: !Sub
