@@ -20,11 +20,11 @@ Parameters:
     Description: Mask to apply to IPs at public subnets
     Default: '/24'
   VpcNamesForPrivate:
-    Type: CommaDelimitedList
+    Type: String
     Description: List for names of private subnets
     Default: 'A,B,C'
   VpcNamesForPublic:
-    Type: CommaDelimitedList
+    Type: String
     Description: List for names of public subnets
     Default: 'A'
   RdsInstanceClass:
@@ -61,9 +61,12 @@ Parameters:
     Description: Port for the database access.
     Default: '5432'
   EC2CreateBastion:
-    Type: Boolean
+    Type: String
     Description: Whether to create a bastion host for EC2 instances.
-    Default: false
+    Default: 'false'
+    AllowedValues:
+       - 'true'
+       - 'false'
   Ec2ImageName:
     Type: String
     Description: Name of the Amazon Machine Image (AMI) to use for EC2 instances.
@@ -73,7 +76,7 @@ Parameters:
     Description: Type of the Amazon EC2 instance to use for EC2 instances. Allowed values at https://aws.amazon.com/es/ec2/instance-types/
     Default: 't3.micro'
   Ec2SshPort:
-    Type: Integer
+    Type: Number
     Description: SSH port for the EC2 instances.
     Default: 22
 Resources:
@@ -82,14 +85,10 @@ Resources:
     Properties:
       TemplateURL: !Sub 'https://{{resolve:ssm:/config/${EnvironmentName}/${AppName}/infra/bucket/artifacts}}.s3.${AWS::URLSuffix}/${AppName}/deploys/networking-db/infra/networking/vpc.yaml'
       Parameters:
-        Name: !Sub ${EnvironmentName}-${AppName}-Business
+        Name: !Sub ${EnvironmentName}-${AppName}-network
         VpcCIDR: !Sub /config/infra/${AppName}/vpc-business/cidr
-        PrivateSubnetACIDR: !Sub /config/infra/${AppName}/vpc-business/cidr-private-subnet-a
-        PrivateSubnetBCIDR: !Sub /config/infra/${AppName}/vpc-business/cidr-private-subnet-b
-        PrivateSubnetCCIDR: !Sub /config/infra/${AppName}/vpc-business/cidr-private-subnet-c
-        PublicSubnetACIDR: !Sub /config/infra/${AppName}/vpc-business/cidr-public-subnet-a
-        #PublicSubnetBCIDR: !Sub /config/infra/${AppName}/vpc-business/cidr-public-subnet-b
-        #PublicSubnetCCIDR: !Sub /config/infra/${AppName}/vpc-business/cidr-public-subnet-c
+        PrivateSubnets: !Ref VpcNamesForPrivate
+        PublicSubnets: !Ref VpcNamesForPublic
       TimeoutInMinutes: 60
   StackNatIG:
     Type: AWS::CloudFormation::Stack
