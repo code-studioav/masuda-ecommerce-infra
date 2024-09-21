@@ -95,11 +95,9 @@ Resources:
     Properties:
       TemplateURL: !Sub 'https://{{resolve:ssm:/config/${EnvironmentName}/${AppName}/infra/bucket/artifacts}}.s3.${AWS::URLSuffix}/${AppName}/deploys/networking-db/infra/networking/nat-ig-gateways.yaml'
       Parameters:
-        Name: !Sub ${EnvironmentName}-${AppName}-Business
+        Name: !Sub ${EnvironmentName}-${AppName}-network-nat
         VPCID: !GetAtt StackVPCBusiness.Outputs.VPCID
-        PublicSubnetA: !GetAtt StackVPCBusiness.Outputs.PublicSubnetA
-        #PublicSubnetB: !GetAtt StackVPCBusiness.Outputs.PublicSubnetB
-        #PublicSubnetC: !GetAtt StackVPCBusiness.Outputs.PublicSubnetC
+        PublicSubnets: !Ref VpcNamesForPublic
       TimeoutInMinutes: 60
   StackAccessRulesBusiness:
     Type: AWS::CloudFormation::Stack
