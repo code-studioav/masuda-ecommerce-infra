@@ -23,6 +23,22 @@ Parameters:
     Type: CommaDelimitedList
     Description: List for names of public subnets
     Default: 'A'
+
+Mappings:
+  PrivateSubnetMap:
+    A:
+      CidrIp: '10.11.12.0'
+    B:
+      CidrIp: '10.11.22.0'
+    C:
+      CidrIp: '10.11.32.0'
+  PublicSubnetMap:
+    A:
+      CidrIp: '10.11.42.0'
+    B:
+      CidrIp: '10.11.52.0'
+    C:
+      CidrIp: '10.11.62.0'
   
 Resources:
   SSMVpcBusinessCidr:
@@ -41,7 +57,10 @@ Resources:
           Name: !Sub '/config/infra/${AppName}/vpc-business/cidr-private-subnet/${SubnetName}'
           Tier: Standard
           Type: String
-          Value: !Ref SubnetName
+          Value: !FindInMap 
+            - PrivateSubnetMap
+            - !Ref SubnetName
+            - CidrIp
   'Fn::ForEach::PublicSubnets':
     - SubnetName
     - !Ref VpcNamesForPublic
@@ -51,5 +70,8 @@ Resources:
           Name: !Sub '/config/infra/${AppName}/vpc-business/cidr-public-subnet/${SubnetName}'
           Tier: Standard
           Type: String
-          Value: !Ref SubnetName
+          Value: !FindInMap 
+            - PublicSubnetMap
+            - !Ref SubnetName
+            - CidrIp
   
