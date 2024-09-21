@@ -1,4 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::LanguageExtensions'
 Description: This template deploys a VPC
 Parameters:
   Name:
@@ -9,29 +10,22 @@ Parameters:
     Description: Please enter the IP range (CIDR notation) for this VPC
     Type: AWS::SSM::Parameter::Value<String>
 
-  PrivateSubnetACIDR:
-    Type: AWS::SSM::Parameter::Value<String>
-    Description: IP range (CIDR notation) for the private subnet in the first Availability Zone
+  PrivateSubnets:
+    Type: CommaDelimitedList
+    Description: List of IP range (CIDR notation) for the private subnet in the first Availability Zone
 
-  PrivateSubnetBCIDR:
-    Type: AWS::SSM::Parameter::Value<String>
-    Description: IP range (CIDR notation) for the private subnet in the second Availability Zone
+  PublicSubnets:
+    Type: CommaDelimitedList
+    Description: List of IP range (CIDR notation) for the public subnet in the first Availability Zone
 
-  PrivateSubnetCCIDR:
-    Type: AWS::SSM::Parameter::Value<String>
-    Description: IP range (CIDR notation) for the private subnet in the second Availability Zone
-
-  PublicSubnetACIDR:
-    Type: AWS::SSM::Parameter::Value<String>
-    Description: IP range (CIDR notation) for the public subnet in the first Availability Zone
-
-#  PublicSubnetBCIDR:
-#    Type: AWS::SSM::Parameter::Value<String>
-#    Description: IP range (CIDR notation) for the public subnet in the second Availability Zone
-#
-#  PublicSubnetCCIDR:
-#    Type: AWS::SSM::Parameter::Value<String>
-#    Description: IP range (CIDR notation) for the public subnet in the second Availability Zone
+Mappings:
+  AvailabilityZone:
+    A:
+      Index: 0
+    B:
+      Index: 1
+    C:
+      Index: 2
 
 Resources:
   VPC:
@@ -46,79 +40,74 @@ Resources:
         Value: !Sub '${Name}-vpc'
 
   #PRIVATE SUBNETS
-  PrivateSubnetA:
-    Type: AWS::EC2::Subnet
-    Properties:
-      VpcId: !Ref VPC
-      AvailabilityZone: !Select [0, !GetAZs ]
-      CidrBlock: !Ref PrivateSubnetACIDR
-      MapPublicIpOnLaunch: false
-      Tags:
-      - Key: Name
-        Value: !Sub '${Name}-private-subnet-a'
-
-  PrivateSubnetB:
-    Type: AWS::EC2::Subnet
-    Properties:
-      VpcId: !Ref VPC
-      AvailabilityZone: !Select [1, !GetAZs ]
-      CidrBlock: !Ref PrivateSubnetBCIDR
-      MapPublicIpOnLaunch: false
-      Tags:
-      - Key: Name
-        Value: !Sub '${Name}-private-subnet-b'
-
-  PrivateSubnetC:
-    Type: AWS::EC2::Subnet
-    Properties:
-      VpcId: !Ref VPC
-      AvailabilityZone: !Select [2, !GetAZs ]
-      CidrBlock: !Ref PrivateSubnetCCIDR
-      MapPublicIpOnLaunch: false
-      Tags:
-      - Key: Name
-        Value: !Sub '${Name}-private-subnet-c'
-
-#PUBLIC SUBNETS
-  PublicSubnetA:
-    Type: AWS::EC2::Subnet
-    Properties:
-      VpcId: !Ref VPC
-      AvailabilityZone: !Select [ 0, !GetAZs '' ]
-      CidrBlock: !Ref PublicSubnetACIDR
-      MapPublicIpOnLaunch: true
-      Tags:
-        - Key: Name
-          Value: !Sub ${Name} Public Subnet (AZ1)
-
-#  PublicSubnetB:
-#    Type: AWS::EC2::Subnet
-#    Properties:
-#      VpcId: !Ref VPC
-#      AvailabilityZone: !Select [ 1, !GetAZs '' ]
-#      CidrBlock: !Ref PublicSubnetBCIDR
-#      MapPublicIpOnLaunch: true
-#      Tags:
-#        - Key: Name
-#          Value: !Sub ${Name} Public Subnet (AZ1)
-#
-#  PublicSubnetC:
-#    Type: AWS::EC2::Subnet
-#    Properties:
-#      VpcId: !Ref VPC
-#      AvailabilityZone: !Select [ 2, !GetAZs '' ]
-#      CidrBlock: !Ref PublicSubnetCCIDR
-#      MapPublicIpOnLaunch: true
-#      Tags:
-#        - Key: Name
-#          Value: !Sub ${Name} Public Subnet (AZ1)
-
-  PrivateSubnet:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub "/config/infra/${Name}/private_subnet"
-      Type: String
-      Value:  !Join [',',[!Ref PrivateSubnetA,!Ref PrivateSubnetB, !Ref PrivateSubnetC],]
+  'Fn::ForEach::PrivateSubnets':
+    - SubnetName
+    - !Ref PrivateSubnets
+    - 'PrivateSubnet${SubnetName}':
+        Type: AWS::EC2::Subnet
+        Properties:
+          VpcId: !Ref VPC
+          AvailabilityZone: !Select
+            - !FindInMap
+              - AvailabilityZone
+              - !Ref SubnetName
+              - Index
+            - !GetAZs
+          CidrBlock: !Sub '{{resolve:ssm:/config/infra/${AppName}/vpc-business/cidr-private-subnet/${SubnetName}}}'
+          MapPublicIpOnLaunch: false
+          Tags:
+          - Key: Name
+            Value: !Sub '${Name}-private-subnet-${SubnetName}'
+  
+  'Fn::ForEach::PrivateSubnetsOutputSSM':
+    - SubnetName
+    - !Ref PrivateSubnets
+    - 'Fn::ForEach::GetAttLoop':
+      - Property
+      - [SubnetId]
+      - 'Private{Properity}-{$SubnetName}':
+          Type: AWS::SSM::Parameter
+          Properties:
+            Name: !Sub "/config/infra/${Name}/private_subnet/{$SubnetName}"
+            Type: String
+            Value: !GetAtt 
+              - !Sub 'PrivateSubnet${SubnetName}'
+              - !Ref Property
+  
+  #PUBLIC SUBNETS
+  'Fn::ForEach::PublicSubnets':
+    - SubnetName
+    - !Ref PublicSubnets
+    - 'PublicSubnet${SubnetName}':
+        Type: AWS::EC2::Subnet
+        Properties:
+          VpcId: !Ref VPC
+          AvailabilityZone: !Select
+            - !FindInMap
+              - AvailabilityZone
+              - !Ref SubnetName
+              - Index
+            - !GetAZs
+          CidrBlock: !Sub '{{resolve:ssm:/config/infra/${AppName}/vpc-business/cidr-public-subnet/${SubnetName}}}'
+          MapPublicIpOnLaunch: true
+          Tags:
+          - Key: Name
+            Value: !Sub '${Name}-public-subnet-${SubnetName}'
+  
+  'Fn::ForEach::PublicSubnetsOutputSSM':
+    - SubnetName
+    - !Ref PublicSubnets
+    - 'Fn::ForEach::GetAttLoop':
+      - Property
+      - [SubnetId]
+      - 'Public{Properity}-{$SubnetName}':
+          Type: AWS::SSM::Parameter
+          Properties:
+            Name: !Sub "/config/infra/${Name}/public_subnet/{$SubnetName}"
+            Type: String
+            Value: !GetAtt 
+              - !Sub 'PublicSubnet${SubnetName}'
+              - !Ref Property
 
   VPCParameter:
     Type: AWS::SSM::Parameter
@@ -135,53 +124,24 @@ Outputs:
     Value: !Ref VpcCIDR
     Description: Data VPC CIDR
 
-  PrivateSubnets:
-    Description: A list of the private subnets
-    Value:
-      !Join [',',[!Ref PrivateSubnetA,!Ref PrivateSubnetB, !Ref PrivateSubnetC],]
-    Export:
-      Name: !Sub '${AWS::StackName}-PrivateSubnets'
+  'Fn::ForEach::PrivateSubnetOutputs':
+    - SubnetName
+    - !Ref PrivateSubnets
+    - 'Fn::ForEach::GetAttLoop':
+        - Property
+        - [SubnetId,CidrBlock]
+        - 'Private${Property}${SubnetName}':
+            Value: !GetAtt [!Sub 'PrivateSubnet${SubnetName}', !Ref Property]
+            Export:
+              Name: !Sub '${AWS::StackName}-PrivateSubnet${SubnetName}'
 
-  PublicSubnets:
-    Description: A list of the public subnets
-    Value:
-      #!Join [',',[!Ref PublicSubnetA,!Ref PublicSubnetB, !Ref PublicSubnetC],]
-      !Join [',',[!Ref PublicSubnetA],]
-    Export:
-      Name: !Sub '${AWS::StackName}-PublicSubnets'
-
-  PrivateSubnetA:
-    Description: A reference to the private subnet A Availability Zone
-    Value: !Ref PrivateSubnetA
-    Export:
-      Name: !Sub '${AWS::StackName}-PrivateSubnetA'
-
-  PrivateSubnetB:
-    Description: A reference to the private subnet B Availability Zone
-    Value: !Ref PrivateSubnetB
-    Export:
-      Name: !Sub '${AWS::StackName}-PrivateSubnetB'
-
-  PrivateSubnetC:
-    Description: A reference to the private subnet C Availability Zone
-    Value: !Ref PrivateSubnetC
-    Export:
-      Name: !Sub '${AWS::StackName}-PrivateSubnetC'
-
-  PublicSubnetA:
-    Description: A reference to the public subnet A Availability Zone
-    Value: !Ref PublicSubnetA
-    Export:
-      Name: !Sub '${AWS::StackName}-PublicSubnetA'
-
-#  PublicSubnetB:
-#    Description: A reference to the public subnet B Availability Zone
-#    Value: !Ref PublicSubnetB
-#    Export:
-#      Name: !Sub '${AWS::StackName}-PublicSubnetB'
-#
-#  PublicSubnetC:
-#    Description: A reference to the public subnet C Availability Zone
-#    Value: !Ref PublicSubnetC
-#    Export:
-#      Name: !Sub '${AWS::StackName}-PublicSubnetC'
+  'Fn::ForEach::PublicSubnetOutputs':
+    - SubnetName
+    - !Ref PublicSubnets
+    - 'Fn::ForEach::GetAttLoop':
+        - Property
+        - [SubnetId,CidrBlock]
+        - 'Public${Property}${SubnetName}':
+            Value: !GetAtt [!Sub 'PublicSubnet${SubnetName}', !Ref Property]
+            Export:
+              Name: !Sub '${AWS::StackName}-PublicSubnet${SubnetName}'
