@@ -80,7 +80,7 @@ Parameters:
     Description: SSH port for the EC2 instances.
     Default: 22
 Resources:
-  StackVPCBusiness:
+  StackVPCNetwork:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub 'https://{{resolve:ssm:/config/${EnvironmentName}/${AppName}/infra/bucket/artifacts}}.s3.${AWS::URLSuffix}/${AppName}/deploys/networking-db/infra/networking/vpc.yaml'
@@ -96,7 +96,7 @@ Resources:
       TemplateURL: !Sub 'https://{{resolve:ssm:/config/${EnvironmentName}/${AppName}/infra/bucket/artifacts}}.s3.${AWS::URLSuffix}/${AppName}/deploys/networking-db/infra/networking/nat-ig-gateways.yaml'
       Parameters:
         Name: !Sub ${EnvironmentName}-${AppName}-network-nat
-        VPCID: !GetAtt StackVPCBusiness.Outputs.VPCID
+        VPCID: !GetAtt StackVPCNetwork.Outputs.VPCID
         PublicSubnets: !Ref VpcNamesForPublic
       TimeoutInMinutes: 60
   StackAccessRulesBusiness:
@@ -106,13 +106,13 @@ Resources:
       Parameters:
         Name:
           Fn::Sub: ${EnvironmentName}-${AppName}-Business
-        VPCID: !GetAtt StackVPCBusiness.Outputs.VPCID
-        PrivateSubnetA: !GetAtt StackVPCBusiness.Outputs.PrivateSubnetA
-        PrivateSubnetB: !GetAtt StackVPCBusiness.Outputs.PrivateSubnetB
-        PrivateSubnetC: !GetAtt StackVPCBusiness.Outputs.PrivateSubnetC
-        PublicSubnetA: !GetAtt StackVPCBusiness.Outputs.PublicSubnetA
-        #PublicSubnetB: !GetAtt StackVPCBusiness.Outputs.PublicSubnetB
-        #PublicSubnetC: !GetAtt StackVPCBusiness.Outputs.PublicSubnetC
+        VPCID: !GetAtt StackVPCNetwork.Outputs.VPCID
+        PrivateSubnetA: !GetAtt StackVPCNetwork.Outputs.PrivateSubnetA
+        PrivateSubnetB: !GetAtt StackVPCNetwork.Outputs.PrivateSubnetB
+        PrivateSubnetC: !GetAtt StackVPCNetwork.Outputs.PrivateSubnetC
+        PublicSubnetA: !GetAtt StackVPCNetwork.Outputs.PublicSubnetA
+        #PublicSubnetB: !GetAtt StackVPCNetwork.Outputs.PublicSubnetB
+        #PublicSubnetC: !GetAtt StackVPCNetwork.Outputs.PublicSubnetC
         InternetGateway: !GetAtt StackNatIG.Outputs.InternetGateway
         NatGatewayA: !GetAtt StackNatIG.Outputs.NatGatewayA
         #NatGatewayB: !GetAtt StackNatIG.Outputs.NatGatewayB
@@ -132,10 +132,10 @@ Resources:
   #      PrivateRouteTable: !GetAtt StackAccessRulesBusiness.Outputs.PrivateRouteTable
   #      PrivateSubnets: !Join
   #        - ','
-  #        - - !GetAtt StackVPCBusiness.Outputs.PrivateSubnetA
-  #          - !GetAtt StackVPCBusiness.Outputs.PrivateSubnetB
-  #          - !GetAtt StackVPCBusiness.Outputs.PrivateSubnetC
-  #      VPCData: !GetAtt StackVPCBusiness.Outputs.VPCID
+  #        - - !GetAtt StackVPCNetwork.Outputs.PrivateSubnetA
+  #          - !GetAtt StackVPCNetwork.Outputs.PrivateSubnetB
+  #          - !GetAtt StackVPCNetwork.Outputs.PrivateSubnetC
+  #      VPCData: !GetAtt StackVPCNetwork.Outputs.VPCID
   #      KeyPairSSM: !Sub '/config/infra/${AppName}/key-pair'
   #      SourceCidr: 0.0.0.0/0
   #    TimeoutInMinutes: 60
@@ -146,12 +146,12 @@ Resources:
       TemplateURL: !Sub 'https://{{resolve:ssm:/config/${EnvironmentName}/${AppName}/infra/bucket/artifacts}}.s3.${AWS::URLSuffix}/${AppName}/deploys/networking-db/infra/rds.yaml'
       Parameters:
         Environment: !Ref EnvironmentName
-        PrivateSubnets: !GetAtt StackVPCBusiness.Outputs.PrivateSubnets
+        PrivateSubnets: !GetAtt StackVPCNetwork.Outputs.PrivateSubnets
         AppName: !Ref AppName
         Name: !Sub ${EnvironmentName}-${AppName}-Data
   #      BastionSG: !GetAtt StackBastion.Outputs.BastionSG
         BusinessSG: !GetAtt StackAccessRulesBusiness.Outputs.SG
-        VPCData: !GetAtt StackVPCBusiness.Outputs.VPCID
+        VPCData: !GetAtt StackVPCNetwork.Outputs.VPCID
 
         RdsInstanceClass: !Ref RdsInstanceClass
         RdsStorageGib: !Ref RdsStorageGib
