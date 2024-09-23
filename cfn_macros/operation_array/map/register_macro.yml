@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This stack create a CFN macro for map array operations.
+Parameters:
+  Environment:
+    Type: String
+  AppName:
+    Type: String
+  RoleLambdaFunctionArn:
+    Type: String
+Resources:
+  MapArrayFunc:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.12
+      Handler: lambda_function.handler
+      Code: "."
+      Role:
+        Ref: RoleLambdaFunctionArn
+      FunctionName: !Sub "${Environment}-${AppName}-cfn-macro-map-array"
+      MemorySize: 128
+      Timeout: 15
+      Environment:
+        Variables:
+          ENVIRONMENT: !Ref Environment
+          APP_NAME: !Ref AppName
+  LGCMapArrayFunc:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${MapArrayFunc}
+      RetentionInDays: 5
+  MacroMapArrayFunc:
+    Type: AWS::CloudFormation::Macro
+    Properties:
+      Description: A macro for map array operations
+      FunctionName: !GetAtt MapArrayFunc.Arn
+      Name: !Sub "${Environment}-${AppName}-map-array-macro"
+
+Outputs:
+  FunctionArn:
+    Value: !GetAtt MapArrayFunc.Arn
