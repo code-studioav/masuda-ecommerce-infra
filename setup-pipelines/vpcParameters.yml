@@ -48,7 +48,7 @@ Mappings:
       CidrIp: '10.11.62.0'
   
 Resources:
-  SSMVpcBusinessCidr:
+  SSMVpcNetworkCidr:
     Type: 'AWS::SSM::Parameter'
     Properties:
       Name: !Sub '/config/infra/${AppName}/vpc-networking/cidr'
@@ -58,7 +58,7 @@ Resources:
   'Fn::ForEach::PrivateSubnets':
     - SubnetName
     - !Ref VpcNamesForPrivate
-    - 'SSMCidrBusinessPrivateSubnet${SubnetName}':
+    - 'SSMCidrNetworkPrivateSubnet${SubnetName}':
         Type: 'AWS::SSM::Parameter'
         Properties:
           Name: !Sub '/config/infra/${AppName}/vpc-networking/cidr-private-subnet/${SubnetName}'
@@ -74,7 +74,7 @@ Resources:
   'Fn::ForEach::PublicSubnets':
     - SubnetName
     - !Ref VpcNamesForPublic
-    - 'SSMCidrBusinessPublicSubnet${SubnetName}':
+    - 'SSMCidrNetworkPublicSubnet${SubnetName}':
         Type: 'AWS::SSM::Parameter'
         Properties:
           Name: !Sub '/config/infra/${AppName}/vpc-networking/cidr-public-subnet/${SubnetName}'

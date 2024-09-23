@@ -27,6 +27,12 @@ Parameters:
     Type: String
     Description: List for names of public subnets
     Default: 'A'
+  VpcEnableS3Gateway:
+    Type: String
+    Description: Flag to create a vpc endpoint between nat gateway and s3
+    AllowedValues:
+         - 'true'
+         - 'false'
   RdsInstanceClass:
     Type: String
     Description: Name of the instance of Rds. See allowed values at https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.Types.html
@@ -90,6 +96,7 @@ Resources:
         PrivateSubnets: !Ref VpcNamesForPrivate
         PublicSubnets: !Ref VpcNamesForPublic
       TimeoutInMinutes: 60
+
   StackNatIG:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -99,24 +106,22 @@ Resources:
         VPCID: !GetAtt StackVPCNetwork.Outputs.VPCID
         PublicSubnets: !Ref VpcNamesForPublic
       TimeoutInMinutes: 60
+
   StackAccessNetworkRules:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub 'https://{{resolve:ssm:/config/${EnvironmentName}/${AppName}/infra/bucket/artifacts}}.s3.${AWS::URLSuffix}/${AppName}/deploys/networking-db/infra/networking/access-rules.yaml'
       Parameters:
         Name:
-          Fn::Sub: ${EnvironmentName}-${AppName}-Business
+          Fn::Sub: ${EnvironmentName}-${AppName}-Networking
         VPCID: !GetAtt StackVPCNetwork.Outputs.VPCID
-        PrivateSubnetA: !GetAtt StackVPCNetwork.Outputs.PrivateSubnetA
-        PrivateSubnetB: !GetAtt StackVPCNetwork.Outputs.PrivateSubnetB
-        PrivateSubnetC: !GetAtt StackVPCNetwork.Outputs.PrivateSubnetC
-        PublicSubnetA: !GetAtt StackVPCNetwork.Outputs.PublicSubnetA
-        #PublicSubnetB: !GetAtt StackVPCNetwork.Outputs.PublicSubnetB
-        #PublicSubnetC: !GetAtt StackVPCNetwork.Outputs.PublicSubnetC
+        VpcEnableS3Gateway: !Ref VpcEnableS3Gateway
+        VpcStackName: !GetAtt StackVPCNetwork.Outputs.StackName
+        NatGatewatStackName: !GetAtt StackNatIG.Outputs.StackName
         InternetGateway: !GetAtt StackNatIG.Outputs.InternetGateway
         NatGatewayA: !GetAtt StackNatIG.Outputs.NatGatewayA
-        #NatGatewayB: !GetAtt StackNatIG.Outputs.NatGatewayB
-        #NatGatewayC: !GetAtt StackNatIG.Outputs.NatGatewayC
+        PrivateSubnets: !Ref VpcNamesForPrivate
+        PublicSubnets: !Ref VpcNamesForPublic
       TimeoutInMinutes: 60
   
   

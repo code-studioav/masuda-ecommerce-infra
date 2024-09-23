@@ -24,6 +24,7 @@ jobs:
       vpc_mask_for_public: ${{ steps.set-properties-variables.outputs.vpc_mask_for_public }}
       vpc_names_for_private: ${{ steps.set-properties-variables.outputs.vpc_names_for_private }}
       vpc_names_for_public: ${{ steps.set-properties-variables.outputs.vpc_names_for_public }}
+      vpc_enable_s3_gateway: ${{ steps.set-properties-variables.outputs.vpc_enable_s3_gateway }}
 
       rds_instance_class: ${{ steps.set-properties-variables.outputs.rds_instance_class }}
       rds_store_gib: ${{ steps.set-properties-variables.outputs.rds_store_gib }}
@@ -55,6 +56,7 @@ jobs:
           echo "::set-output name=vpc_mask_for_public::$(bash read_from_properties.sh ./project_properties.toml networking.config.vpc.mask_for_public)"
           echo "::set-output name=vpc_names_for_private::$(bash read_from_properties.sh ./project_properties.toml networking.config.vpc.names_for_private)"
           echo "::set-output name=vpc_names_for_public::$(bash read_from_properties.sh ./project_properties.toml networking.config.vpc.names_for_public)"
+          echo "::set-output name=vpc_enable_s3_gateway::$(bash read_from_properties.sh ./project_properties.toml networking.config.vpc.enable_s3_gateway)"
 
           echo "::set-output name=rds_instance_class::$(bash read_from_properties.sh ./project_properties.toml rds.database.instance_class)"
           echo "::set-output name=rds_store_gib::$(bash read_from_properties.sh ./project_properties.toml rds.database.store_gib)"
@@ -85,6 +87,7 @@ jobs:
       VPC_MASK_FOR_PUBLIC: ${{ needs.set-variables.outputs.vpc_mask_for_public }}
       VPC_NAMES_FOR_PRIVATE: ${{ needs.set-variables.outputs.vpc_names_for_private }}
       VPC_NAMES_FOR_PUBLIC: ${{ needs.set-variables.outputs.vpc_names_for_public }}
+      VPC_ENABLE_S3_GATEWAY: ${{ needs.set-variables.outputs.vpc_enable_s3_gateway }}
       RDS_INSTANCE_CLASS: ${{ needs.set-variables.outputs.rds_instance_class }}
       RDS_STORE_GIB: ${{ needs.set-variables.outputs.rds_store_gib }}
       RDS_ENGINE: ${{ needs.set-variables.outputs.rds_engine }}
@@ -115,7 +118,7 @@ jobs:
           aws cloudformation deploy --template-file ./setup-pipelines/pipelines.yml --stack-name $APP_NAME-pipeline-infrastructure-$ENVIRONMENT --parameter-overrides EnvironmentName=$ENVIRONMENT AppName=$APP_NAME \
                                     RdsInstanceClass=$RDS_INSTANCE_CLASS RdsStorageGib=$RDS_STORE_GIB RdsEngine=$RDS_ENGINE RdsVersion=$RDS_VERSION DbName=$DB_NAME DbUserName=$DB_USER_NAME DbPort=$DB_PORT \
                                     Ec2CreateBastion=$EC2_CREATE_BASTION Ec2ImageName=$EC2_IMAGE_NAME Ec2InstanceType=$EC2_INSTANCE_TYPE Ec2SshPort=$EC2_SSH_PORT \
-                                    VpcCidr="$VPC_CIDR" VpcMaskForPrivate=$VPC_MASK_FOR_PRIVATE VpcMaskForPublic=$VPC_MASK_FOR_PUBLIC VpcNamesForPrivate="$VPC_NAMES_FOR_PRIVATE" VpcNamesForPublic="$VPC_NAMES_FOR_PUBLIC" \
+                                    VpcCidr="$VPC_CIDR" VpcMaskForPrivate=$VPC_MASK_FOR_PRIVATE VpcMaskForPublic=$VPC_MASK_FOR_PUBLIC VpcNamesForPrivate="$VPC_NAMES_FOR_PRIVATE" VpcNamesForPublic="$VPC_NAMES_FOR_PUBLIC" VpcEnableS3Gateway="$VPC_ENABLE_S3_GATEWAY" \
                                     --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
 
   #deploy:

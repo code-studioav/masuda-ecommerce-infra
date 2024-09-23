@@ -1,4 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::LanguageExtensions'
 Description: Configure associations to allow access to resource.
 
 Parameters:
@@ -9,52 +10,38 @@ Parameters:
   VPCID:
     Type: AWS::EC2::VPC::Id
     Description: Choose which VPC the security groups should be deployed to
-
-  PrivateSubnetA:
+  
+  VpcStackName:
     Type: String
-    Description: SubnetId in AZ A
-
-  PrivateSubnetB:
+    Description: Name of the vpc stack
+  
+  NatGatewatStackName:
     Type: String
-    Description: SubnetId in AZ B
+    Description: Name of the nat gateway stack
 
-  PrivateSubnetC:
-    Type: String
-    Description: SubnetId in AZ C
+  PrivateSubnets:
+    Type: CommaDelimitedList
+    Description: List of IP range (CIDR notation) for the private subnet in the first Availability Zone
 
-  PublicSubnetA:
-    Type: String
-    Description: Public SubnetId in AZ A
-
-#  PublicSubnetB:
-#    Type: String
-#    Description: Public SubnetId in AZ B
-#
-#  PublicSubnetC:
-#    Type: String
-#    Description: Public SubnetId in AZ C
+  PublicSubnets:
+    Type: CommaDelimitedList
+    Description: List of IP range (CIDR notation) for the public subnet in the first Availability Zone
 
   InternetGateway:
     Type: String
     Default: "-"
-
-  NatGatewayA:
+  
+  VpcEnableS3Gateway:
     Type: String
-    Default: '-'
-    Description: Public SubnetId in AZ A
+    Description: Flag to create a vpc endpoint between nat gateway and s3
+    AllowedValues:
+         - 'true'
+         - 'false'
 
-#  NatGatewayB:
-#    Type: String
-#    Default: '-'
-#    Description: Public SubnetId in AZ B
-#
-#  NatGatewayC:
-#    Type: String
-#    Default: '-'
-#    Description: Public SubnetId in AZ C
+Conditions:
+  CreateS3GatewayEndpoint: !Equals ['true', !Ref VpcEnableS3Gateway]
 
 Resources:
-  ##### Security groups
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -75,40 +62,23 @@ Resources:
       Description: access from self
       SourceSecurityGroupId: !GetAtt SecurityGroup.GroupId
       IpProtocol: '-1'
-
-  ########
-  PrivateRouteTableA:
+  
+  PrivateRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPCID
       Tags:
       - Key: Name
-        Value: !Sub '${Name}-private-route-table-a'
-
-  PrivateRouteTableB:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref VPCID
-      Tags:
-      - Key: Name
-        Value: !Sub '${Name}-private-route-table-b'
-
-  PrivateRouteTableC:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref VPCID
-      Tags:
-       - Key: Name
-         Value: !Sub '${Name}-private-route-table-c'
-
+        Value: !Sub '${Name}-private-route-table'
+  
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPCID
       Tags:
-       - Key: Name
-         Value: !Sub '${Name}-public-route-table'
-
+      - Key: Name
+        Value: !Sub '${Name}-public-route-table'
+  
   InternetEgressAssociation:
     Type: AWS::EC2::Route
     Properties:
@@ -116,66 +86,39 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
 
-  ############## ASSOCIATIONS  ##############
-  #ASSOCIATE PRIVATE ROUTE TABLE WITH PRIVATE SUBNETS
-  PrivateSubnetARouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      SubnetId: !Ref PrivateSubnetA
-      RouteTableId: !Ref PrivateRouteTableA
+  ##############  Private subnet associations  ##############
+  'Fn::ForEach::PrivateSubnetRouteTableAssociations':
+    - SubnetName
+    - !Ref PrivateSubnets
+    - 'PrivateSubnet${SubnetName}RouteTableAssociation':
+        Type: AWS::EC2::SubnetRouteTableAssociation
+        Properties:
+          SubnetId: Fn::ImportValue: 
+            'Fn::Sub': '${VpcStackName}-PrivateSubnet${SubnetName}'
+          RouteTableId: !Ref PrivateRouteTable
 
-#  PrivateSubnetBRouteTableAssociation:
-#    Type: AWS::EC2::SubnetRouteTableAssociation
-#    Properties:
-#      SubnetId: !Ref PrivateSubnetB
-#      RouteTableId: !Ref PrivateRouteTableB
-#
-#  PrivateSubnetCRouteTableAssociation:
-#    Type: AWS::EC2::SubnetRouteTableAssociation
-#    Properties:
-#      SubnetId: !Ref PrivateSubnetC
-#      RouteTableId: !Ref PrivateRouteTableC
+  ##############  Public subnet associations  ##############
+  'Fn::ForEach::PublicSubnetRouteTableAssociations':
+    - SubnetName
+    - !Ref PrivateSubnets
+    - 'PublicSubnet${SubnetName}RouteTableAssociation':
+        Type: AWS::EC2::SubnetRouteTableAssociation
+        Properties:
+          SubnetId: Fn::ImportValue: 
+            'Fn::Sub': '${VpcStackName}-PublicSubnet${SubnetName}'
+          RouteTableId: !Ref PublicRouteTable
 
-  #ASSOCIATE PUBLIC ROUTE TABLE WITH PUBLIC SUBNETS
-  PublicSubnetARouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      SubnetId: !Ref PublicSubnetA
-      RouteTableId: !Ref PublicRouteTable
-
-#  PublicSubnetBRouteTableAssociation:
-#    Type: AWS::EC2::SubnetRouteTableAssociation
-#    Properties:
-#      SubnetId: !Ref PublicSubnetB
-#      RouteTableId: !Ref PublicRouteTable
-#
-#  PublicSubnetCRouteTableAssociation:
-#    Type: AWS::EC2::SubnetRouteTableAssociation
-#    Properties:
-#      SubnetId: !Ref PublicSubnetC
-#      RouteTableId: !Ref PublicRouteTable
-
-#  ## NATGATEWAY PRIVATE ASSOCIATIONS
-  NatGatewayAAssociation:
-    Type: AWS::EC2::Route
-    Properties:
-      RouteTableId: !Ref PrivateRouteTableA
-      DestinationCidrBlock: 0.0.0.0/0
-      NatGatewayId: !Ref NatGatewayA
-
-#  NatGatewayBAssociation:
-#    Type: AWS::EC2::Route
-#    Properties:
-#      RouteTableId: !Ref PrivateRouteTableB
-#      DestinationCidrBlock: 0.0.0.0/0
-#      NatGatewayId: !Ref NatGatewayB
-#
-#  NatGatewayCAssociation:
-#    Type: AWS::EC2::Route
-#    Properties:
-#      RouteTableId: !Ref PrivateRouteTableC
-#      DestinationCidrBlock: 0.0.0.0/0
-#      NatGatewayId: !Ref NatGatewayC
+  ##############  NATGATEWAY PRIVATE ASSOCIATIONS  ##############
+  'Fn::ForEach::NatGatewaysAssociation':
+    - SubnetName
+    - !Ref PrivateSubnets
+    - 'NatGateway${SubnetName}Association':
+        Type: AWS::EC2::Route
+        Properties:
+          RouteTableId: !Ref PrivateRouteTable
+          DestinationCidrBlock: 0.0.0.0/0
+          NatGatewayId: Fn::ImportValue: 
+            'Fn::Sub': '${NatGatewatStackName}-NatGateway${SubnetName}'
 
   SSMSecurityGroup:
     Type: AWS::SSM::Parameter
@@ -186,15 +129,14 @@ Resources:
       Value: !Ref SecurityGroup
 
   S3GatewayEndpoint:
+    Condition: CreateS3GatewayEndpoint
     Type: 'AWS::EC2::VPCEndpoint'
     Properties:
       VpcEndpointType: Gateway
       ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
       VpcId: !Ref VPCID
       RouteTableIds:
-        - !Ref PrivateRouteTableA
-#        - !Ref PrivateRouteTableB
-#        - !Ref PrivateRouteTableC
+        - !Ref PrivateRouteTable
 
 
 Outputs:
@@ -202,24 +144,9 @@ Outputs:
     Value: !Ref PublicRouteTable
     Description: Public Route Table for public subnets
 
-  PrivateRouteTableA:
-    Value: !Ref PrivateRouteTableA
-    Description: Public Route Table for private subnets A
-
-  PrivateRouteTableB:
-    Value: !Ref PrivateRouteTableB
-    Description: Public Route Table for private subnets B
-
-  PrivateRouteTableC:
-    Value: !Ref PrivateRouteTableC
-    Description: Public Route Table for private subnets C
-
   PrivateRouteTable:
-    Value: !Join
-      - ','
-      - - !Ref PrivateRouteTableA
-        - !Ref PrivateRouteTableB
-        - !Ref PrivateRouteTableC
+    Value: !Ref PrivateRouteTable
+    Description: Public Route Table for private subnets
 
   SG:
     Description: A reference to the security group

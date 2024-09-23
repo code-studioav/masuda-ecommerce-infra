@@ -117,6 +117,9 @@ Resources:
       Value: !Ref VPC
 
 Outputs:
+  StackName:
+    Value: !Sub '${AWS::StackName}'
+
   VPCID:
     Value: !Ref VPC
 
