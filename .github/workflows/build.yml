@@ -71,6 +71,31 @@ jobs:
           echo "::set-output name=ec2_image_name::$(bash read_from_properties.sh ./project_properties.toml ec2.bastion.image_name)"
           echo "::set-output name=ec2_instance_type::$(bash read_from_properties.sh ./project_properties.toml ec2.bastion.instance_type)"
           echo "::set-output name=ec2_ssh_port::$(bash read_from_properties.sh ./project_properties.toml ec2.bastion.ssh_port)"
+  deploy-macros:
+    name: Deploy ${{ inputs.environment }} macros
+    environment: ${{ inputs.environment }}
+    needs: [set-variables]
+    runs-on: ubuntu-latest
+    env:
+      ENVIRONMENT: ${{ inputs.environment }}
+      AWS_ROLE_TO_ASSUME: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+
+      APP_NAME: ${{ needs.set-variables.outputs.app_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: Configure AWS Credentials Role
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{env.AWS_ROLE_TO_ASSUME}}
+          role-session-name: networking-infra
+          aws-region: ${{env.AWS_REGION}}
+      - name:  Setup Parameters 
+        run: |
+          aws cloudformation deploy --template-file ./cfn_macros/operation_array/map/register_macro.yml --stack-name $ENVIRONMENT-$APP_NAME-cfn-macros --parameter-overrides EnvironmentName=$ENVIRONMENT AppName=$APP_NAME \
+                                    --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
   deploy-pipeline:
     name: Deploy ${{ inputs.environment }} pipeline
     environment: ${{ inputs.environment }}
