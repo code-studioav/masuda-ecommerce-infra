@@ -145,6 +145,7 @@ jobs:
           aws-region: ${{env.AWS_REGION}}
       - name: Install aws rain package
         run: |
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
           brew install rain
       - name:  Setup Parameters 
         run: |
