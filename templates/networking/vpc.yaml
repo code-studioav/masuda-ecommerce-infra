@@ -136,7 +136,7 @@ Outputs:
     - !Ref PrivateSubnets
     - 'Fn::ForEach::GetAttLoop':
         - Property
-        - [SubnetId,CidrBlock]
+        - [SubnetId]
         - 'Private${Property}${SubnetName}Out':
             Value: !GetAtt [!Sub 'PrivateSubnet${SubnetName}', !Ref Property]
             Export:
@@ -147,7 +147,7 @@ Outputs:
     - !Ref PublicSubnets
     - 'Fn::ForEach::GetAttLoop':
         - Property
-        - [SubnetId,CidrBlock]
+        - [SubnetId]
         - 'Public${Property}${SubnetName}Out':
             Value: !GetAtt [!Sub 'PublicSubnet${SubnetName}', !Ref Property]
             Export:
