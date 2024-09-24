@@ -147,10 +147,10 @@ jobs:
         run: |
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
           brew install rain
-          ls -al /home/linuxbrew/.linuxbrew/Cellar/rain/1.15.0
+          ls -al /home/linuxbrew/.linuxbrew/Cellar/rain/1.15.0/bin
       - name:  Package and deploy 
         run: |
-          /home/linuxbrew/.linuxbrew/Cellar/rain/1.15.0/rain pkg -x ./cfn_macros/operation_array/map/register_macro.yml
+          /home/linuxbrew/.linuxbrew/Cellar/rain/1.15.0/bin/rain pkg -x ./cfn_macros/operation_array/map/register_macro.yml
           cat ./cfn_macros/operation_array/map/register_macro.yml
           aws cloudformation deploy --template-file ./cfn_macros/operation_array/map/register_macro.yml --stack-name $ENVIRONMENT-$APP_NAME-cfn-macros --parameter-overrides EnvironmentName=$ENVIRONMENT AppName=$APP_NAME --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
   
