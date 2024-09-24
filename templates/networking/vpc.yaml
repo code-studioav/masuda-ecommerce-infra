@@ -40,7 +40,7 @@ Resources:
         Value: !Sub '${Name}-vpc'
 
   #PRIVATE SUBNETS
-  'Fn::ForEach::PrivateSubnets':
+  'Fn::ForEach::PrivateSubnetsLoop':
     - SubnetName
     - !Ref PrivateSubnets
     - 'PrivateSubnet${SubnetName}':
@@ -75,7 +75,7 @@ Resources:
               - !Ref Property
   
   #PUBLIC SUBNETS
-  'Fn::ForEach::PublicSubnets':
+  'Fn::ForEach::PublicSubnetsLoop':
     - SubnetName
     - !Ref PublicSubnets
     - 'PublicSubnet${SubnetName}':
