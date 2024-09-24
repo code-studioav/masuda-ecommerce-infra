@@ -49,7 +49,7 @@ Parameters:
     Type: String
     Description: Version of the database engine
     Default: '16.4'
-  DBName:
+  DbName:
     Type: String
     Description: Name of the database to create.
     Default: 'generic_db'
@@ -162,7 +162,7 @@ Resources:
         RdsStorageGib: !Ref RdsStorageGib
         RdsEngine: !Ref RdsEngine
         RdsVersion: !Ref RdsVersion
-        DBName: !Ref DBName
+        DbName: !Ref DbName
         DbUserName: !Ref DbUserName
         DbPort: !Ref DbPort
       TimeoutInMinutes: 60
