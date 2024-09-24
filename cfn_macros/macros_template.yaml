@@ -1,7 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: Parent stack for macros
 Parameters:
-  Parameters:
   EnvironmentName:
     Type: String
   AppName:
