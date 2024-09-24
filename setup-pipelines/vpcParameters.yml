@@ -31,21 +31,6 @@ Parameters:
     Type: String
     Description: Mask to apply to public subnets
     Default: '/24'
-Mappings:
-  PrivateSubnetMap:
-    A:
-      CidrIp: '10.11.12.0'
-    B:
-      CidrIp: '10.11.22.0'
-    C:
-      CidrIp: '10.11.32.0'
-  PublicSubnetMap:
-    A:
-      CidrIp: '10.11.42.0'
-    B:
-      CidrIp: '10.11.52.0'
-    C:
-      CidrIp: '10.11.62.0'
   
 Resources:
   SSMVpcNetworkCidr:
@@ -64,13 +49,12 @@ Resources:
           Name: !Sub '/config/infra/${AppName}/vpc-networking/cidr-private-subnet/${SubnetName}'
           Tier: Standard
           Type: String
-          Value: !Sub
-            - '${BaseIp}${Mask}'
-            - BaseIp: !FindInMap 
-              - PrivateSubnetMap
-              - !Ref SubnetName
-              - CidrIp
-              Mask: !Ref VpcMaskForPrivate
+          Value:
+            Fn::Transform:
+            - Name: !Sub "${EnvironmentName}-${AppName}-subnet-generator"
+              Parameters:
+                VpcCidr: !Ref VpcCidr
+                SubnetMask: !Ref VpcMaskForPrivate
   'Fn::ForEach::PublicSubnets':
     - SubnetName
     - !Ref VpcNamesForPublic
@@ -80,11 +64,10 @@ Resources:
           Name: !Sub '/config/infra/${AppName}/vpc-networking/cidr-public-subnet/${SubnetName}'
           Tier: Standard
           Type: String
-          Value: !Sub
-            - '${BaseIp}${Mask}'
-            - BaseIp: !FindInMap 
-              - PublicSubnetMap
-              - !Ref SubnetName
-              - CidrIp
-              Mask: !Ref VpcMaskForPublic
+          Value: 
+            Fn::Transform:
+            - Name: !Sub "${EnvironmentName}-${AppName}-subnet-generator"
+              Parameters:
+                VpcCidr: !Ref VpcCidr
+                SubnetMask: !Ref VpcMaskForPublic
   
