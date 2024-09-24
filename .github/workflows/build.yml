@@ -48,29 +48,29 @@ jobs:
         name: Set project properties variables
         run: |
           npm install
-          echo "::set-output name=app_name::$(bash read_from_properties.sh ./project_properties.toml project.definition.name)"
-          echo "::set-output name=description::$(bash read_from_properties.sh ./project_properties.toml project.definition.description)"
+          echo "app_name=$(bash read_from_properties.sh ./project_properties.toml project.definition.name)" >> $GITHUB_OUTPUT
+          echo "description=$(bash read_from_properties.sh ./project_properties.toml project.definition.description)" >> $GITHUB_OUTPUT
           
-          echo "::set-output name=vpc_cidr::$(bash read_from_properties.sh ./project_properties.toml networking.config.vpc.cidr)"
-          echo "::set-output name=vpc_mask_for_private::$(bash read_from_properties.sh ./project_properties.toml networking.config.vpc.mask_for_private)"
-          echo "::set-output name=vpc_mask_for_public::$(bash read_from_properties.sh ./project_properties.toml networking.config.vpc.mask_for_public)"
-          echo "::set-output name=vpc_names_for_private::$(bash read_from_properties.sh ./project_properties.toml networking.config.vpc.names_for_private)"
-          echo "::set-output name=vpc_names_for_public::$(bash read_from_properties.sh ./project_properties.toml networking.config.vpc.names_for_public)"
-          echo "::set-output name=vpc_enable_s3_gateway::$(bash read_from_properties.sh ./project_properties.toml networking.config.vpc.enable_s3_gateway)"
+          echo "vpc_cidr=$(bash read_from_properties.sh ./project_properties.toml networking.config.vpc.cidr)" >> $GITHUB_OUTPUT
+          echo "vpc_mask_for_private=$(bash read_from_properties.sh ./project_properties.toml networking.config.vpc.mask_for_private)" >> $GITHUB_OUTPUT
+          echo "vpc_mask_for_public=$(bash read_from_properties.sh ./project_properties.toml networking.config.vpc.mask_for_public)" >> $GITHUB_OUTPUT
+          echo "vpc_names_for_private=$(bash read_from_properties.sh ./project_properties.toml networking.config.vpc.names_for_private)" >> $GITHUB_OUTPUT
+          echo "vpc_names_for_public=$(bash read_from_properties.sh ./project_properties.toml networking.config.vpc.names_for_public)" >> $GITHUB_OUTPUT
+          echo "vpc_enable_s3_gateway=$(bash read_from_properties.sh ./project_properties.toml networking.config.vpc.enable_s3_gateway)" >> $GITHUB_OUTPUT
 
-          echo "::set-output name=rds_instance_class::$(bash read_from_properties.sh ./project_properties.toml rds.database.instance_class)"
-          echo "::set-output name=rds_store_gib::$(bash read_from_properties.sh ./project_properties.toml rds.database.store_gib)"
-          echo "::set-output name=rds_engine::$(bash read_from_properties.sh ./project_properties.toml rds.database.engine)"
-          echo "::set-output name=rds_version::$(bash read_from_properties.sh ./project_properties.toml rds.database.version)"
+          echo "rds_instance_class=$(bash read_from_properties.sh ./project_properties.toml rds.database.instance_class)" >> $GITHUB_OUTPUT
+          echo "rds_store_gib=$(bash read_from_properties.sh ./project_properties.toml rds.database.store_gib)" >> $GITHUB_OUTPUT
+          echo "rds_engine=$(bash read_from_properties.sh ./project_properties.toml rds.database.engine)" >> $GITHUB_OUTPUT
+          echo "rds_version=$(bash read_from_properties.sh ./project_properties.toml rds.database.version)" >> $GITHUB_OUTPUT
           
-          echo "::set-output name=db_name::$(bash read_from_properties.sh ./project_properties.toml rds.database.config.db_name)"
-          echo "::set-output name=db_user_name::$(bash read_from_properties.sh ./project_properties.toml rds.database.config.db_user_name)"
-          echo "::set-output name=db_port::$(bash read_from_properties.sh ./project_properties.toml rds.database.config.db_port)"
+          echo "db_name=$(bash read_from_properties.sh ./project_properties.toml rds.database.config.db_name)" >> $GITHUB_OUTPUT
+          echo "db_user_name=$(bash read_from_properties.sh ./project_properties.toml rds.database.config.db_user_name)" >> $GITHUB_OUTPUT
+          echo "db_port=$(bash read_from_properties.sh ./project_properties.toml rds.database.config.db_port)" >> $GITHUB_OUTPUT
 
-          echo "::set-output name=ec2_create_bastion::$(bash read_from_properties.sh ./project_properties.toml ec2.bastion.create_bastion)"
-          echo "::set-output name=ec2_image_name::$(bash read_from_properties.sh ./project_properties.toml ec2.bastion.image_name)"
-          echo "::set-output name=ec2_instance_type::$(bash read_from_properties.sh ./project_properties.toml ec2.bastion.instance_type)"
-          echo "::set-output name=ec2_ssh_port::$(bash read_from_properties.sh ./project_properties.toml ec2.bastion.ssh_port)"
+          echo "ec2_create_bastion=$(bash read_from_properties.sh ./project_properties.toml ec2.bastion.create_bastion)" >> $GITHUB_OUTPUT
+          echo "ec2_image_name=$(bash read_from_properties.sh ./project_properties.toml ec2.bastion.image_name)" >> $GITHUB_OUTPUT
+          echo "ec2_instance_type=$(bash read_from_properties.sh ./project_properties.toml ec2.bastion.instance_type)" >> $GITHUB_OUTPUT
+          echo "ec2_ssh_port=$(bash read_from_properties.sh ./project_properties.toml ec2.bastion.ssh_port)" >> $GITHUB_OUTPUT
   deploy-pipeline:
     name: Deploy ${{ inputs.environment }} pipeline
     environment: ${{ inputs.environment }}
@@ -144,10 +144,11 @@ jobs:
           aws-region: ${{env.AWS_REGION}}
       - name:  Setup Parameters 
         run: |
-          cp ./cfn_macros/operation_array/map/lambda_function.py ./lambda_function.py
-          zip ./lambda_function.py ./lambda_function.zip
-          aws s3 cp lambda_function.zip s3://artifacts-$ENVIRONMENT-$AWS_REGION-$AWS_ACCOUNT_ID/$APP_NAME/deploys/networking-db/cfn-macros/operation-array/lambda_function.zip
-          aws cloudformation deploy --template-file ./cfn_macros/operation_array/map/register_macro.yml --stack-name $ENVIRONMENT-$APP_NAME-cfn-macros --parameter-overrides EnvironmentName=$ENVIRONMENT AppName=$APP_NAME \
+          cd ./cfn_macros/operation_array
+          zip -r ./map.zip ./map
+          aws s3 cp lambda_function.zip s3://artifacts-$ENVIRONMENT-$AWS_REGION-$AWS_ACCOUNT_ID/$APP_NAME/deploys/networking-db/cfn-macros/operation-array/map.zip
+          
+          aws cloudformation deploy --template-file ./map/register_macro.yml --stack-name $ENVIRONMENT-$APP_NAME-cfn-macros --parameter-overrides EnvironmentName=$ENVIRONMENT AppName=$APP_NAME \
                                     --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
   
   #deploy:

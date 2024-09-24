@@ -39,7 +39,8 @@ Resources:
       Runtime: python3.12
       Handler: lambda_function.handler
       Code:
-        ZipFile: !Sub 'https://{{resolve:ssm:/config/${EnvironmentName}/${AppName}/infra/bucket/artifacts}}.s3.${AWS::URLSuffix}/${AppName}/deploys/networking-db/cfn-macros/operation-array/lambda_function.zip'
+        S3Bucket: !Sub '{{resolve:ssm:/config/${EnvironmentName}/${AppName}/infra/bucket/artifacts}}'
+        S3Key: deploys/networking-db/cfn-macros/operation-array/map.zip
       Role: !GetAtt MapArrayFuncRole.Arn
       FunctionName: !Sub "${EnvironmentName}-${AppName}-cfn-macro-map-array"
       MemorySize: 128
