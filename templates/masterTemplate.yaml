@@ -151,10 +151,10 @@ Resources:
       TemplateURL: !Sub 'https://{{resolve:ssm:/config/${EnvironmentName}/${AppName}/infra/bucket/artifacts}}.s3.${AWS::URLSuffix}/${AppName}/deploys/networking-db/infra/rds.yaml'
       Parameters:
         Environment: !Ref EnvironmentName
-        PrivateSubnets: !GetAtt StackVPCNetwork.Outputs.PrivateSubnets
         AppName: !Ref AppName
         Name: !Sub ${EnvironmentName}-${AppName}-Data
-  #      BastionSG: !GetAtt StackBastion.Outputs.BastionSG
+        BastionSG: !GetAtt StackBastion.Outputs.BastionSG
+        BastionCreated: !Ref EC2CreateBastion
         BusinessSG: !GetAtt StackAccessNetworkRules.Outputs.SG
         VPCData: !GetAtt StackVPCNetwork.Outputs.VPCID
 

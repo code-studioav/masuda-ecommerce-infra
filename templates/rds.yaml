@@ -13,15 +13,11 @@ Parameters:
   Name:
     Type: String
 
-  PrivateSubnets:
-    Description: Specify the Private subnets DB
-    Type: String
-
   BusinessSG:
     Type: String
-  #BastionSG:
-  #  Type: String
-  #  Default: "-"
+  BastionSG:
+    Type: String
+    Default: "-"
 
   VPCData:
     Type: AWS::EC2::VPC::Id
@@ -62,16 +58,18 @@ Parameters:
     Type: Number
     Description: Port for the database access.
     Default: 5432
+  BastionCreated:
+    Type: String
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+
 Conditions:
-  ProdEnv: !Equals
-    - !Ref Environment
-    - prod
-  StagingEnv: !Equals
-    - !Ref Environment
-    - staging
-  IsProd: !Or
-    - !Condition ProdEnv
-    - !Condition StagingEnv
+  AssociateBastion: !Equals
+    - !Ref BastionCreated
+    - 'true'
+
 Resources:
   RoleRdsMonitoring:
     Type: "AWS::IAM::Role"
@@ -102,9 +100,11 @@ Resources:
     Properties:
       DBSubnetGroupDescription: Subnet Group for PostgreSQL database
       DBSubnetGroupName: !Sub '${Name}-subnetgroup'
-      SubnetIds: !Split
-        - ','
-        - !Ref PrivateSubnets
+      SubnetIds:
+        Fn::Transform:
+          - Name: !Sub "${Environment}-${AppName}-read-ssm-from-path"
+            Parameters:
+              Path: !Sub '/config/infra/${AppName}/private_subnet/'
   DBInstance:
     Type: 'AWS::RDS::DBInstance'
     Properties:
@@ -123,14 +123,11 @@ Resources:
         - Key: Name
           Value: !Sub '${Name}-rds'
       BackupRetentionPeriod: 35
-      EnablePerformanceInsights: !If [IsProd, true, false]
+      EnablePerformanceInsights: false # Should come from toml file
       MonitoringInterval: 60
       MaxAllocatedStorage: 150
       MonitoringRoleArn: !GetAtt RoleRdsMonitoring.Arn
-      MultiAZ: !If
-        - IsProd
-        - true
-        - false
+      MultiAZ: false # Should come from toml file
 
     DeletionPolicy: Snapshot
     UpdateReplacePolicy: Snapshot
@@ -160,10 +157,13 @@ Resources:
           IpProtocol: tcp
           SourceSecurityGroupId: !Ref BusinessSG
           ToPort: !Ref DbPort
-  #      - FromPort: 5432
-  #        IpProtocol: tcp
-  #        SourceSecurityGroupId: !Ref BastionSG
-  #        ToPort: 5432
+        - !If
+          - AssociateBastion
+          - FromPort: 5432
+            IpProtocol: tcp
+            SourceSecurityGroupId: !Ref BastionSG
+            ToPort: 5432
+          - !Ref AWS::NoValue
 Outputs:
   DBEndpoint:
     Description: Connection endpoint for the database
