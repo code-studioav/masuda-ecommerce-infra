@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This stack create a CFN macro generate a random subnet from vpc cidr and mask.
+Parameters:
+  EnvironmentName:
+    Type: String
+  AppName:
+    Type: String
+Resources:
+  SubnetGenRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: 'sts:AssumeRole'
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSLambdaExecute
+  SubnetGenFunc:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.11
+      Handler: index.handler
+      Code:
+        ZipFile: !Rain::Embed lambda_function.py
+      Role: !GetAtt SubnetGenRole.Arn
+      FunctionName: !Sub "${EnvironmentName}-${AppName}-cfn-subnet-generator"
+      MemorySize: 128
+      Timeout: 15
+      Environment:
+        Variables:
+          ENVIRONMENT: !Ref EnvironmentName
+          APP_NAME: !Ref AppName
+  LGSubnetGen:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${SubnetGenFunc}
+      RetentionInDays: 5
+  MacroSubnetGen:
+    Type: AWS::CloudFormation::Macro
+    Properties:
+      Description: A macro for read ssm from path
+      FunctionName: !GetAtt SubnetGenFunc.Arn
+      Name: !Sub "${EnvironmentName}-${AppName}-subnet-generator"

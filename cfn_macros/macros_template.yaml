@@ -26,3 +26,12 @@ Resources:
         AppName: !Ref AppName
         EnvironmentName: !Ref EnvironmentName
       TimeoutInMinutes: 60
+  
+  StackSubnetGenerator:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://${BucketName}.s3.${AWS::URLSuffix}/${AppName}/deploys/networking-db/cfn_macros/subnet_gen/register_macro.yaml'
+      Parameters:
+        AppName: !Ref AppName
+        EnvironmentName: !Ref EnvironmentName
+      TimeoutInMinutes: 60

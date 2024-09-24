@@ -71,10 +71,50 @@ jobs:
           echo "ec2_image_name=$(bash read_from_properties.sh ./project_properties.toml ec2.bastion.image_name)" >> $GITHUB_OUTPUT
           echo "ec2_instance_type=$(bash read_from_properties.sh ./project_properties.toml ec2.bastion.instance_type)" >> $GITHUB_OUTPUT
           echo "ec2_ssh_port=$(bash read_from_properties.sh ./project_properties.toml ec2.bastion.ssh_port)" >> $GITHUB_OUTPUT
+  
+  deploy-macros:
+    name: Deploy ${{ inputs.environment }} macros
+    environment: ${{ inputs.environment }}
+    needs: [set-variables]
+    runs-on: ubuntu-latest
+    env:
+      ENVIRONMENT: ${{ inputs.environment }}
+      AWS_ROLE_TO_ASSUME: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+
+      APP_NAME: ${{ needs.set-variables.outputs.app_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: Configure AWS Credentials Role
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{env.AWS_ROLE_TO_ASSUME}}
+          role-session-name: networking-infra
+          aws-region: ${{env.AWS_REGION}}
+      - name: Install aws rain package
+        run: |
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          brew install rain
+      - name:  Package and deploy 
+        run: |
+          for t in $(find ./cfn_macros -name '*.yaml' -or -name '*.json');
+            do
+              if [ "${t}" != "./cfn_macros/macros_template.yaml" ]
+              then
+                  /home/linuxbrew/.linuxbrew/Cellar/rain/1.15.0/bin/rain pkg $t --output $t
+                  sub_path=${t#"./cfn_macros/"}
+                  aws s3 cp $t s3://artifacts-$ENVIRONMENT-$AWS_REGION-$AWS_ACCOUNT_ID/$APP_NAME/deploys/networking-db/cfn_macros/$sub_path
+              fi
+            done
+          aws cloudformation deploy --template-file ./cfn_macros/macros_template.yaml --stack-name $ENVIRONMENT-$APP_NAME-cfn-macros --parameter-overrides EnvironmentName=$ENVIRONMENT AppName=$APP_NAME BucketName="artifacts-$ENVIRONMENT-$AWS_REGION-$AWS_ACCOUNT_ID" --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
+  
   deploy-pipeline:
     name: Deploy ${{ inputs.environment }} pipeline
     environment: ${{ inputs.environment }}
-    needs: [set-variables]
+    needs: [set-variables, deploy-macros]
     runs-on: ubuntu-latest
     env:
       ENVIRONMENT: ${{ inputs.environment }}
@@ -121,44 +161,6 @@ jobs:
                                     VpcCidr="$VPC_CIDR" VpcMaskForPrivate=$VPC_MASK_FOR_PRIVATE VpcMaskForPublic=$VPC_MASK_FOR_PUBLIC VpcNamesForPrivate="$VPC_NAMES_FOR_PRIVATE" VpcNamesForPublic="$VPC_NAMES_FOR_PUBLIC" VpcEnableS3Gateway="$VPC_ENABLE_S3_GATEWAY" \
                                     --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
   
-  deploy-macros:
-    name: Deploy ${{ inputs.environment }} macros
-    environment: ${{ inputs.environment }}
-    needs: [set-variables]
-    runs-on: ubuntu-latest
-    env:
-      ENVIRONMENT: ${{ inputs.environment }}
-      AWS_ROLE_TO_ASSUME: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-
-      APP_NAME: ${{ needs.set-variables.outputs.app_name }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - name: Configure AWS Credentials Role
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{env.AWS_ROLE_TO_ASSUME}}
-          role-session-name: networking-infra
-          aws-region: ${{env.AWS_REGION}}
-      - name: Install aws rain package
-        run: |
-          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          brew install rain
-      - name:  Package and deploy 
-        run: |
-          for t in $(find ./cfn_macros -name '*.yaml' -or -name '*.json');
-            do
-              if [ "${t}" != "./cfn_macros/macros_template.yaml" ]
-              then
-                  /home/linuxbrew/.linuxbrew/Cellar/rain/1.15.0/bin/rain pkg $t --output $t
-                  sub_path=${t#"./cfn_macros/"}
-                  aws s3 cp $t s3://artifacts-$ENVIRONMENT-$AWS_REGION-$AWS_ACCOUNT_ID/$APP_NAME/deploys/networking-db/cfn_macros/$sub_path
-              fi
-            done
-          aws cloudformation deploy --template-file ./cfn_macros/macros_template.yaml --stack-name $ENVIRONMENT-$APP_NAME-cfn-macros --parameter-overrides EnvironmentName=$ENVIRONMENT AppName=$APP_NAME BucketName="artifacts-$ENVIRONMENT-$AWS_REGION-$AWS_ACCOUNT_ID" --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
   
   deploy:
     name: Deploy ${{ inputs.environment }} AWS
