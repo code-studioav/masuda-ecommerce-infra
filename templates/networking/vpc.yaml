@@ -121,13 +121,13 @@ Resources:
       Value: !Ref VPC
 
 Outputs:
-  StackName:
+  StackNameOut:
     Value: !Sub '${AWS::StackName}'
 
-  VPCID:
+  VPCIDOut:
     Value: !Ref VPC
 
-  VPCCIDR:
+  VPCCIDROut:
     Value: !Ref VpcCIDR
     Description: Data VPC CIDR
 
@@ -137,7 +137,7 @@ Outputs:
     - 'Fn::ForEach::GetAttLoop':
         - Property
         - [SubnetId,CidrBlock]
-        - 'Private${Property}${SubnetName}':
+        - 'Private${Property}${SubnetName}Out':
             Value: !GetAtt [!Sub 'PrivateSubnet${SubnetName}', !Ref Property]
             Export:
               Name: !Sub '${AWS::StackName}-PrivateSubnet${SubnetName}'
@@ -148,7 +148,7 @@ Outputs:
     - 'Fn::ForEach::GetAttLoop':
         - Property
         - [SubnetId,CidrBlock]
-        - 'Public${Property}${SubnetName}':
+        - 'Public${Property}${SubnetName}Out':
             Value: !GetAtt [!Sub 'PublicSubnet${SubnetName}', !Ref Property]
             Export:
               Name: !Sub '${AWS::StackName}-PublicSubnet${SubnetName}'
