@@ -154,9 +154,11 @@ jobs:
               if [ "${t}" != "./cfn_macros/macros_template.yaml" ]
               then
                   /home/linuxbrew/.linuxbrew/Cellar/rain/1.15.0/bin/rain pkg $t --output $t
+                  sub_path=${t#"./cfn_macros/"}
+                  aws s3 cp $t s3://artifacts-$ENVIRONMENT-$AWS_REGION-$AWS_ACCOUNT_ID/$APP_NAME/$sub_path
               fi
             done
-          aws cloudformation deploy --template-file ./cfn_macros/macros_template.yaml --stack-name $ENVIRONMENT-$APP_NAME-cfn-macros --parameter-overrides EnvironmentName=$ENVIRONMENT AppName=$APP_NAME --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
+          aws cloudformation deploy --template-file ./cfn_macros/macros_template.yaml --stack-name $ENVIRONMENT-$APP_NAME-cfn-macros --parameter-overrides EnvironmentName=$ENVIRONMENT AppName=$APP_NAME BucketName="artifacts-$ENVIRONMENT-$AWS_REGION-$AWS_ACCOUNT_ID" --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
   
   #deploy:
   #  name: Deploy ${{ inputs.environment }} AWS

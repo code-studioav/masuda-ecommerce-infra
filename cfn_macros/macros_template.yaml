@@ -5,12 +5,14 @@ Parameters:
     Type: String
   AppName:
     Type: String
+  BucketName:
+    Type: String
 
 Resources:
   StackReadSSMFromPath:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: ./cfn_macros/ssm-params/from_path/register_macro.yml
+      TemplateURL: !Sub '${BucketUrl}/${AppName}/deploys/cfn_macros/ssm-params/from_path/register_macro.yml'
       Parameters:
         AppName: !Ref AppName
         EnvironmentName: !Ref EnvironmentName
@@ -19,7 +21,7 @@ Resources:
   StackMapArrayString:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: ./cfn_macros/operation_array/map/register_macro.yml
+      TemplateURL: !Sub '${BucketName}/${AppName}/deploys/cfn_macros/operation_array/map/register_macro.yml'
       Parameters:
         AppName: !Ref AppName
         EnvironmentName: !Ref EnvironmentName
