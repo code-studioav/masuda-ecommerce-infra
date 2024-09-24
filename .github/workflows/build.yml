@@ -130,6 +130,7 @@ jobs:
       ENVIRONMENT: ${{ inputs.environment }}
       AWS_ROLE_TO_ASSUME: ${{ secrets.AWS_ROLE_TO_ASSUME }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
 
       APP_NAME: ${{ needs.set-variables.outputs.app_name }}
     steps:
