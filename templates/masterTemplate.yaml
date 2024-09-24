@@ -96,6 +96,7 @@ Resources:
     Properties:
       TemplateURL: !Sub 'https://{{resolve:ssm:/config/${EnvironmentName}/${AppName}/infra/bucket/artifacts}}.s3.${AWS::URLSuffix}/${AppName}/deploys/networking-db/infra/networking/vpc.yaml'
       Parameters:
+        AppName: !Ref AppName
         Name: !Sub ${EnvironmentName}-${AppName}-network
         VpcCIDR: !Sub /config/infra/${AppName}/vpc-networking/cidr
         PrivateSubnets: !Ref VpcNamesForPrivate

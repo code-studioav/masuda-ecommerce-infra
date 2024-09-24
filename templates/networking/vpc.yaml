@@ -2,6 +2,10 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::LanguageExtensions'
 Description: This template deploys a VPC
 Parameters:
+  AppName:
+    Type: String
+    ConstraintDescription: '[a-z]+'
+    Description: The project name.
   Name:
     Type: String
     Description: Name to identify
