@@ -58,4 +58,4 @@ Resources:
     Properties:
       Description: A macro for map array operations
       FunctionName: !GetAtt MapStringArrayFunc.Arn
-      Name: !Sub "${EnvironmentName}-${AppName}-map-string-array-macro"
+      Name: 'map-string-array-macro'

@@ -45,4 +45,4 @@ Resources:
     Properties:
       Description: A macro for read ssm from path
       FunctionName: !GetAtt SubnetGenFunc.Arn
-      Name: !Sub "${EnvironmentName}-${AppName}-subnet-generator"
+      Name: 'subnet-generator'

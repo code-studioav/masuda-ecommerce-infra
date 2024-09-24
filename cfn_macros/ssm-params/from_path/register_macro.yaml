@@ -69,4 +69,4 @@ Resources:
     Properties:
       Description: A macro for read ssm from path
       FunctionName: !GetAtt ReadSsmFromPath.Arn
-      Name: !Sub "${EnvironmentName}-${AppName}-read-ssm-from-path"
+      Name: 'read-ssm-from-path'
