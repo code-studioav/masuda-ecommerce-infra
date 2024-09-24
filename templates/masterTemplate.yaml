@@ -143,6 +143,9 @@ Resources:
         VPCData: !GetAtt StackVPCNetwork.Outputs.VPCID
         KeyPairSSM: !Sub '/config/infra/${AppName}/key-pair'
         SourceCidr: 0.0.0.0/0
+        LatestAMI: !Ref Ec2ImageName
+        InstanceType: !Ref Ec2InstanceType
+        SshPort: !Ref Ec2SshPort
       TimeoutInMinutes: 60
   
   StackRDS:
