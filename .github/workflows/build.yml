@@ -124,7 +124,7 @@ jobs:
   deploy-macros:
     name: Deploy ${{ inputs.environment }} macros
     environment: ${{ inputs.environment }}
-    needs: [set-variables, deploy-pipeline]
+    needs: [set-variables]
     runs-on: ubuntu-latest
     env:
       ENVIRONMENT: ${{ inputs.environment }}
@@ -143,9 +143,13 @@ jobs:
           role-to-assume: ${{env.AWS_ROLE_TO_ASSUME}}
           role-session-name: networking-infra
           aws-region: ${{env.AWS_REGION}}
+      - name: Install aws rain package
+        run: |
+          brew install rain
       - name:  Setup Parameters 
-        run: |          
-          aws cloudformation package --template-file ./cfn_macros/operation_array/map/register_macro.yml --s3-bucket artifacts-$ENVIRONMENT-$AWS_REGION-$AWS_ACCOUNT_ID --s3-prefix $APP_NAME/deploys/networking-db --output-template-file ./cfn_macros/operation_array/map/register_macro.yml
+        run: |
+          rain pkg -x ./cfn_macros/operation_array/map/register_macro.yml
+          cat ./cfn_macros/operation_array/map/register_macro.yml
           aws cloudformation deploy --template-file ./cfn_macros/operation_array/map/register_macro.yml --stack-name $ENVIRONMENT-$APP_NAME-cfn-macros --parameter-overrides EnvironmentName=$ENVIRONMENT AppName=$APP_NAME --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
   
   #deploy:
