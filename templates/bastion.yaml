@@ -1,5 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Parameters:
+  EnvironmentName:
+    type: String
   AppName:
     Type: String
   Name:
@@ -10,9 +12,6 @@ Parameters:
     Type: String
   PrivateRouteTable:
     Type: String
-  PrivateSubnets:
-    Description: Specify the Private subnets no DB
-    Type: List<String>
   VPCData:
     Description: VPCID of data
     Type: String
@@ -74,7 +73,11 @@ Resources:
         - - !Ref Name
           - BastionASG
       LaunchConfigurationName: !Ref BastionLaunchConfig
-      VPCZoneIdentifier: !Ref PrivateSubnets
+      VPCZoneIdentifier:
+        Fn::Transform:
+          - Name: !Sub "${EnvironmentName}-${AppName}-read-ssm-from-path"
+            Parameters:
+              Path: !Sub '/config/infra/${AppName}/private_subnet/'
       MinSize: '1'
       DesiredCapacity: '1'
       MaxSize: '1'
