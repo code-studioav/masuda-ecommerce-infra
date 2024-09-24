@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Parent stack for macros
+Parameters:
+  Parameters:
+  EnvironmentName:
+    Type: String
+  AppName:
+    Type: String
+
+Resources:
+  StackReadSSMFromPath:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./cfn_macros/ssm-params/from_path/register_macro.yml
+      Parameters:
+        AppName: !Ref AppName
+        EnvironmentName: !Ref EnvironmentName
+      TimeoutInMinutes: 60
+
+  StackMapArrayString:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./cfn_macros/operation_array/map/register_macro.yml
+      Parameters:
+        AppName: !Ref AppName
+        EnvironmentName: !Ref EnvironmentName
+      TimeoutInMinutes: 60
