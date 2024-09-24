@@ -12,7 +12,7 @@ Resources:
   StackReadSSMFromPath:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub '${BucketUrl}/${AppName}/deploys/cfn_macros/ssm-params/from_path/register_macro.yml'
+      TemplateURL: !Sub '${BucketName}/${AppName}/deploys/cfn_macros/ssm-params/from_path/register_macro.yml'
       Parameters:
         AppName: !Ref AppName
         EnvironmentName: !Ref EnvironmentName
