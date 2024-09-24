@@ -146,7 +146,7 @@ jobs:
         run: |
           cd ./cfn_macros/operation_array
           zip ./map.zip ./map/lambda_function.py
-          aws s3 cp lambda_function.zip s3://artifacts-$ENVIRONMENT-$AWS_REGION-$AWS_ACCOUNT_ID/$APP_NAME/deploys/networking-db/cfn-macros/operation-array/map.zip
+          aws s3 cp map.zip s3://artifacts-$ENVIRONMENT-$AWS_REGION-$AWS_ACCOUNT_ID/$APP_NAME/deploys/networking-db/cfn-macros/operation-array/map.zip
           
           aws cloudformation deploy --template-file ./map/register_macro.yml --stack-name $ENVIRONMENT-$APP_NAME-cfn-macros --parameter-overrides EnvironmentName=$ENVIRONMENT AppName=$APP_NAME \
                                     --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
