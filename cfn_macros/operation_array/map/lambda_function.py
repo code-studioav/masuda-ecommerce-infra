@@ -1,3 +1,4 @@
+"Handler lambda code for string array mapping"
 import traceback
 from enum import Enum
 

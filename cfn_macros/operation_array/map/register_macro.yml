@@ -37,7 +37,7 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Runtime: python3.11
-      Handler: lambda_function.handler
+      Handler: index.handler
       Code:
         ZipFile: !Rain::Embed lambda_function.py
       Role: !GetAtt MapArrayFuncRole.Arn
