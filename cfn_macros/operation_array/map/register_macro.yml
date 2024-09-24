@@ -36,7 +36,7 @@ Resources:
   MapArrayFunc:
     Type: AWS::Lambda::Function
     Properties:
-      Runtime: python3.12
+      Runtime: python3.11
       Handler: lambda_function.handler
       Code:
         ZipFile: !Rain::Embed lambda_function.py
@@ -59,7 +59,3 @@ Resources:
       Description: A macro for map array operations
       FunctionName: !GetAtt MapArrayFunc.Arn
       Name: !Sub "${EnvironmentName}-${AppName}-map-array-macro"
-
-Outputs:
-  FunctionArn:
-    Value: !GetAtt MapArrayFunc.Arn
