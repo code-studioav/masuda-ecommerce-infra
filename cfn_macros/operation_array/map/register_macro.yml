@@ -40,7 +40,7 @@ Resources:
       Handler: lambda_function.handler
       Code:
         S3Bucket: !Sub '{{resolve:ssm:/config/${EnvironmentName}/${AppName}/infra/bucket/artifacts}}'
-        S3Key: deploys/networking-db/cfn-macros/operation-array/map.zip
+        S3Key: !Sub ${AppName}/deploys/networking-db/cfn-macros/operation-array/map.zip
       Role: !GetAtt MapArrayFuncRole.Arn
       FunctionName: !Sub "${EnvironmentName}-${AppName}-cfn-macro-map-array"
       MemorySize: 128
