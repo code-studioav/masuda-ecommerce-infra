@@ -149,7 +149,6 @@ jobs:
           brew install rain
       - name:  Package and deploy 
         run: |
-          find ./cfn_macros -name '*.yaml' -or -name '*.json'
           for t in $(find ./cfn_macros -name '*.yaml' -or -name '*.json');
             do
               if [ "${t}" != "./cfn_macros/macros_template.yaml" ]
