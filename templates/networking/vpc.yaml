@@ -65,7 +65,7 @@ Resources:
     - 'Fn::ForEach::GetAttLoop':
       - Property
       - [SubnetId]
-      - 'Private${Property}-${SubnetName}':
+      - 'Private${Property}${SubnetName}':
           Type: AWS::SSM::Parameter
           Properties:
             Name: !Sub "/config/infra/${Name}/private_subnet/${SubnetName}"
@@ -100,7 +100,7 @@ Resources:
     - 'Fn::ForEach::GetAttLoop':
       - Property
       - [SubnetId]
-      - 'Public${Property}-${SubnetName}':
+      - 'Public${Property}${SubnetName}':
           Type: AWS::SSM::Parameter
           Properties:
             Name: !Sub "/config/infra/${Name}/public_subnet/${SubnetName}"
