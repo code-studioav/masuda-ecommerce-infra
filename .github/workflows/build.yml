@@ -155,6 +155,7 @@ jobs:
               then
                   /home/linuxbrew/.linuxbrew/Cellar/rain/1.15.0/bin/rain pkg $t --output $t
                   sub_path=${t#"./cfn_macros/"}
+                  echo s3://artifacts-$ENVIRONMENT-$AWS_REGION-$AWS_ACCOUNT_ID/$APP_NAME/deploys/networking-db/$sub_path
                   aws s3 cp $t s3://artifacts-$ENVIRONMENT-$AWS_REGION-$AWS_ACCOUNT_ID/$APP_NAME/deploys/networking-db/$sub_path
               fi
             done
