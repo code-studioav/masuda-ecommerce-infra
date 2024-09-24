@@ -6,7 +6,7 @@ Parameters:
   AppName:
     Type: String
 Resources:
-  MapArrayFuncRole:
+  MapStringArrayFuncRole:
     Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
@@ -20,7 +20,7 @@ Resources:
       Path: /
       Policies:
         -
-          PolicyName: !Sub '${EnvironmentName}-${AppName}-lambda-execution-rol'
+          PolicyName: !Sub '${EnvironmentName}-${AppName}-lambda-manage-logs'
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -33,29 +33,29 @@ Resources:
                 Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AWSLambdaExecute
-  MapArrayFunc:
+  MapStringArrayFunc:
     Type: AWS::Lambda::Function
     Properties:
       Runtime: python3.11
       Handler: index.handler
       Code:
         ZipFile: !Rain::Embed lambda_function.py
-      Role: !GetAtt MapArrayFuncRole.Arn
-      FunctionName: !Sub "${EnvironmentName}-${AppName}-cfn-macro-map-array"
+      Role: !GetAtt MapStringArrayFuncRole.Arn
+      FunctionName: !Sub "${EnvironmentName}-${AppName}-cfn-macro-map-string-array"
       MemorySize: 128
       Timeout: 15
       Environment:
         Variables:
           ENVIRONMENT: !Ref EnvironmentName
           APP_NAME: !Ref AppName
-  LGCMapArrayFunc:
+  LGCMapStringArrayFunc:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub /aws/lambda/${MapArrayFunc}
+      LogGroupName: !Sub /aws/lambda/${MapStringArrayFunc}
       RetentionInDays: 5
-  MacroMapArrayFunc:
+  MacroMapStringArrayFunc:
     Type: AWS::CloudFormation::Macro
     Properties:
       Description: A macro for map array operations
-      FunctionName: !GetAtt MapArrayFunc.Arn
-      Name: !Sub "${EnvironmentName}-${AppName}-map-array-macro"
+      FunctionName: !GetAtt MapStringArrayFunc.Arn
+      Name: !Sub "${EnvironmentName}-${AppName}-map-string-array-macro"
