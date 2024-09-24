@@ -66,6 +66,7 @@ Parameters:
     Type: String
     Description: Port for the database access.
     Default: '5432'
+
   EC2CreateBastion:
     Type: String
     Description: Whether to create a bastion host for EC2 instances.
@@ -85,6 +86,10 @@ Parameters:
     Type: Number
     Description: SSH port for the EC2 instances.
     Default: 22
+
+Conditions:
+  CreateBastion: !Equals ['true', !Ref EC2CreateBastion]
+
 Resources:
   StackVPCNetwork:
     Type: AWS::CloudFormation::Stack
@@ -124,26 +129,26 @@ Resources:
         PublicSubnets: !Ref VpcNamesForPublic
       TimeoutInMinutes: 60
   
-  
-  #StackBastion:
-  #  Type: AWS::CloudFormation::Stack
-  #  Properties:
-  #    TemplateURL: !Sub 'https://{{resolve:ssm:/config/${EnvironmentName}/${AppName}/infra/bucket/artifacts}}.s3.${AWS::URLSuffix}/${AppName}/deploys/networking-db/infra/bastion.yaml'
-  #    Parameters:
-  #      Environment: !Ref EnvironmentName
-  #      AppName: !Ref AppName
-  #      Name: !Sub ${EnvironmentName}-${AppName}-Business
-  #      NatGateway: !GetAtt StackNatIG.Outputs.NatGateway
-  #      PrivateRouteTable: !GetAtt StackAccessNetworkRules.Outputs.PrivateRouteTable
-  #      PrivateSubnets: !Join
-  #        - ','
-  #        - - !GetAtt StackVPCNetwork.Outputs.PrivateSubnetA
-  #          - !GetAtt StackVPCNetwork.Outputs.PrivateSubnetB
-  #          - !GetAtt StackVPCNetwork.Outputs.PrivateSubnetC
-  #      VPCData: !GetAtt StackVPCNetwork.Outputs.VPCID
-  #      KeyPairSSM: !Sub '/config/infra/${AppName}/key-pair'
-  #      SourceCidr: 0.0.0.0/0
-  #    TimeoutInMinutes: 60
+  StackBastion:
+    Condition: CreateBastion
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://{{resolve:ssm:/config/${EnvironmentName}/${AppName}/infra/bucket/artifacts}}.s3.${AWS::URLSuffix}/${AppName}/deploys/networking-db/infra/bastion.yaml'
+      Parameters:
+        Environment: !Ref EnvironmentName
+        AppName: !Ref AppName
+        Name: !Sub ${EnvironmentName}-${AppName}-Business
+        NatGateway: !GetAtt StackNatIG.Outputs.NatGateway
+        PrivateRouteTable: !GetAtt StackAccessNetworkRules.Outputs.PrivateRouteTable
+        PrivateSubnets: !Join
+          - ','
+          - - !GetAtt StackVPCNetwork.Outputs.PrivateSubnetA
+            - !GetAtt StackVPCNetwork.Outputs.PrivateSubnetB
+            - !GetAtt StackVPCNetwork.Outputs.PrivateSubnetC
+        VPCData: !GetAtt StackVPCNetwork.Outputs.VPCID
+        KeyPairSSM: !Sub '/config/infra/${AppName}/key-pair'
+        SourceCidr: 0.0.0.0/0
+      TimeoutInMinutes: 60
   
   StackRDS:
     Type: AWS::CloudFormation::Stack
