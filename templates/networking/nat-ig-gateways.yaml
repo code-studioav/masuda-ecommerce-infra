@@ -51,7 +51,7 @@ Resources:
           AllocationId: !GetAtt 
             - !Sub 'ElasticIP${SubnetName}'
             - AllocationId
-          SubnetId: !Sub '{{resolve:ssm:/config/infra/${Name}/public_subnet/{$SubnetName}}}'
+          SubnetId: !Sub '{{resolve:ssm:/config/infra/${Name}/public_subnet/${SubnetName}}}'
           Tags:
             - Key: Name
               Value: !Sub ${Name}-nat-${SubnetName}
@@ -62,7 +62,7 @@ Resources:
     - 'NatGateway${SubnetName}-SSM':
         Type: AWS::SSM::Parameter
         Properties:
-          Name: !Sub "/config/infra/${Name}/ng/{$SubnetName}"
+          Name: !Sub "/config/infra/${Name}/ng/${SubnetName}"
           Type: String
           Value: !GetAtt 
             - !Sub 'NatGateway${SubnetName}'
