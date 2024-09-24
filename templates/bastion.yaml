@@ -73,7 +73,7 @@ Resources:
       LaunchConfigurationName: !Ref BastionLaunchConfig
       VPCZoneIdentifier:
         Fn::Transform:
-          - Name: !Sub "${EnvironmentName}-${AppName}-read-ssm-from-path"
+            Name: !Sub "${EnvironmentName}-${AppName}-read-ssm-from-path"
             Parameters:
               Path: !Sub '/config/infra/${AppName}/private_subnet/'
       MinSize: '1'

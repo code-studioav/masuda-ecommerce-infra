@@ -51,7 +51,7 @@ Resources:
           Type: String
           Value:
             Fn::Transform:
-            - Name: !Sub "${EnvironmentName}-${AppName}-subnet-generator"
+              Name: !Sub "${EnvironmentName}-${AppName}-subnet-generator"
               Parameters:
                 VpcCidr: !Ref VpcCidr
                 SubnetMask: !Ref VpcMaskForPrivate
@@ -66,7 +66,7 @@ Resources:
           Type: String
           Value: 
             Fn::Transform:
-            - Name: !Sub "${EnvironmentName}-${AppName}-subnet-generator"
+              Name: !Sub "${EnvironmentName}-${AppName}-subnet-generator"
               Parameters:
                 VpcCidr: !Ref VpcCidr
                 SubnetMask: !Ref VpcMaskForPublic

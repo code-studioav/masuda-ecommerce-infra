@@ -102,7 +102,7 @@ Resources:
       DBSubnetGroupName: !Sub '${Name}-subnetgroup'
       SubnetIds:
         Fn::Transform:
-          - Name: !Sub "${Environment}-${AppName}-read-ssm-from-path"
+            Name: !Sub "${Environment}-${AppName}-read-ssm-from-path"
             Parameters:
               Path: !Sub '/config/infra/${AppName}/private_subnet/'
   DBInstance:
