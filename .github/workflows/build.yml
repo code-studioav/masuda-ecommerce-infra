@@ -145,8 +145,9 @@ jobs:
           aws-region: ${{env.AWS_REGION}}
       - name: Install aws rain package
         run: |
-          apt-get install build-essential procps curl file git
+          sudo apt-get install build-essential procps curl file git
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          ls -al
           brew install rain
       - name:  Setup Parameters 
         run: |
