@@ -144,7 +144,7 @@ jobs:
           aws-region: ${{env.AWS_REGION}}
       - name:  Setup Parameters 
         run: |
-          cp ./cfn_macros/operation_array/lambda_function.py .
+          cp ./cfn_macros/operation_array/map/lambda_function.py .
           zip ./lambda_function.py ./lambda_function.zip
           aws s3 cp lambda_function.zip s3://artifacts-$ENVIRONMENT-$AWS_REGION-$AWS_ACCOUNT_ID/$APP_NAME/deploys/networking-db/cfn-macros/operation-array/lambda_function.zip
           aws cloudformation deploy --template-file ./cfn_macros/operation_array/map/register_macro.yml --stack-name $ENVIRONMENT-$APP_NAME-cfn-macros --parameter-overrides EnvironmentName=$ENVIRONMENT AppName=$APP_NAME \
