@@ -156,7 +156,7 @@ Resources:
         Environment: !Ref EnvironmentName
         AppName: !Ref AppName
         Name: !Sub ${EnvironmentName}-${AppName}-Data
-        BastionSG: !GetAtt StackBastion.Outputs.BastionSG
+        BastionSG: !If [CreateBastion, !GetAtt StackBastion.Outputs.BastionSG, '-']
         BastionCreated: !Ref EC2CreateBastion
         BusinessSG: !GetAtt StackAccessNetworkRules.Outputs.SG
         VPCData: !GetAtt StackVPCNetwork.Outputs.VPCID
