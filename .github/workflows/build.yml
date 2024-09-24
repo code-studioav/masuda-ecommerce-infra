@@ -144,13 +144,9 @@ jobs:
           role-session-name: networking-infra
           aws-region: ${{env.AWS_REGION}}
       - name:  Setup Parameters 
-        run: |
-          cd ./cfn_macros/operation_array/map
-          zip ./map.zip ./lambda_function.py
-          aws s3 cp map.zip s3://artifacts-$ENVIRONMENT-$AWS_REGION-$AWS_ACCOUNT_ID/$APP_NAME/deploys/networking-db/cfn-macros/operation-array/map.zip
-          
-          aws cloudformation deploy --template-file ./register_macro.yml --stack-name $ENVIRONMENT-$APP_NAME-cfn-macros --parameter-overrides EnvironmentName=$ENVIRONMENT AppName=$APP_NAME \
-                                    --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
+        run: |          
+          aws cloudformation package --template-file ./cfn_macros/operation_array/map/register_macro.yml --s3-bucket artifacts-$ENVIRONMENT-$AWS_REGION-$AWS_ACCOUNT_ID --s3-prefix $APP_NAME/deploys/networking-db --output-template-file ./cfn_macros/operation_array/map/register_macro.yml
+          aws cloudformation deploy --template-file ./cfn_macros/operation_array/map/register_macro.yml --stack-name $ENVIRONMENT-$APP_NAME-cfn-macros --parameter-overrides EnvironmentName=$ENVIRONMENT AppName=$APP_NAME --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
   
   #deploy:
   #  name: Deploy ${{ inputs.environment }} AWS
