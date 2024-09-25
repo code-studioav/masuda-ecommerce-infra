@@ -59,7 +59,7 @@ Resources:
   'Fn::ForEach::NatGatewaysSSM':
     - SubnetName
     - !Ref PublicSubnets
-    - 'NatGateway${SubnetName}-SSM':
+    - 'NatGateway${SubnetName}SSM':
         Type: AWS::SSM::Parameter
         Properties:
           Name: !Sub "/config/infra/${Name}/ng/${SubnetName}"
