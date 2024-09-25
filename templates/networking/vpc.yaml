@@ -72,7 +72,7 @@ Resources:
       - 'Private${Property}${SubnetName}':
           Type: AWS::SSM::Parameter
           Properties:
-            Name: !Sub "/config/infra/${Name}/private_subnet/${SubnetName}"
+            Name: !Sub "/config/infra/${AppName}/private_subnet/${SubnetName}"
             Type: String
             Value: !GetAtt 
               - !Sub 'PrivateSubnet${SubnetName}'
@@ -116,7 +116,7 @@ Resources:
   VPCParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub "/config/infra/${Name}/vpc_id"
+      Name: !Sub "/config/infra/${AppName}/vpc_id"
       Type: String
       Value: !Ref VPC
 
