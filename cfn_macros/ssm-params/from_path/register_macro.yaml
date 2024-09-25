@@ -38,10 +38,8 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - ssm:GetParameters
-                  - ssm:GetParameter
-                  - ssm:GetParametersByPath
-                Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter:*
+                  - ssm:*
+                Resource: '*'
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AWSLambdaExecute
   ReadSsmFromPath:
