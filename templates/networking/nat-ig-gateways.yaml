@@ -63,7 +63,7 @@ Resources:
     - 'NatGateway${SubnetName}SSM':
         Type: AWS::SSM::Parameter
         Properties:
-          Name: !Sub "/config/infra/${Name}/ng/${SubnetName}"
+          Name: !Sub "/config/infra/${AppName}/ng/${SubnetName}"
           Type: String
           Value: !GetAtt 
             - !Sub 'NatGateway${SubnetName}'
