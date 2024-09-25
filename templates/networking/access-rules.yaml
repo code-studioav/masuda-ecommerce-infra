@@ -118,7 +118,7 @@ Resources:
   ##############  NATGATEWAY PRIVATE ASSOCIATIONS  ##############
   'Fn::ForEach::NatGatewaysAssociation':
     - SubnetName
-    - !Ref PrivateSubnets
+    - !Ref PublicSubnets
     - 'NatGateway${SubnetName}Association':
         Type: AWS::EC2::Route
         Properties:
