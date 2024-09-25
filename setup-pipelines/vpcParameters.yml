@@ -31,12 +31,6 @@ Parameters:
     Type: String
     Description: Mask to apply to public subnets
     Default: '/24'
-  UpdateSubnetCidr:
-    Type: String
-    AllowedValues:
-         - 'true'
-         - 'false'
-    Default: 'false'
 Mappings:
   PrivateSubnetMap:
     A:
@@ -71,6 +65,7 @@ Mappings:
           Parameters:
             VpcCidr: !Ref VpcCidr
             SubnetMask: !Ref VpcMaskForPublic
+            CacheBreaker: 'PA'
     B:
       CidrIp:
         Fn::Transform:
@@ -78,6 +73,7 @@ Mappings:
           Parameters:
             VpcCidr: !Ref VpcCidr
             SubnetMask: !Ref VpcMaskForPublic
+            CacheBreaker: 'PB'
     C:
       CidrIp:
         Fn::Transform:
@@ -85,10 +81,8 @@ Mappings:
           Parameters:
             VpcCidr: !Ref VpcCidr
             SubnetMask: !Ref VpcMaskForPublic
-
-Conditions:
-  UpdateSubnets: !Equals [!Ref UpdateSubnetCidr, 'true']
-
+            CacheBreaker: 'PC'
+  
 Resources:
   SSMVpcNetworkCidr:
     Type: 'AWS::SSM::Parameter'
@@ -102,7 +96,6 @@ Resources:
     - !Ref VpcNamesForPrivate
     - 'SSMCidrNetworkPrivateSubnet${SubnetName}':
         Type: 'AWS::SSM::Parameter'
-        Condition: UpdateSubnets
         Properties:
           Name: !Sub '/config/infra/${AppName}/vpc-networking/cidr-private-subnet/${SubnetName}'
           Tier: Standard
@@ -116,7 +109,6 @@ Resources:
     - !Ref VpcNamesForPublic
     - 'SSMCidrNetworkPublicSubnet${SubnetName}':
         Type: 'AWS::SSM::Parameter'
-        Condition: UpdateSubnets
         Properties:
           Name: !Sub '/config/infra/${AppName}/vpc-networking/cidr-public-subnet/${SubnetName}'
           Tier: Standard

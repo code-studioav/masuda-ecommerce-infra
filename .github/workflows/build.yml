@@ -6,11 +6,6 @@ on:
         description: 'Environment to deploy'
         type: environment
         required: true
-      update_subnets_cidr:
-        type: boolean
-        required: true
-        default: false
-        description: 'Execute action for update subnets cidrs'
 
 permissions:
   id-token: write
@@ -144,8 +139,6 @@ jobs:
       EC2_IMAGE_NAME: ${{ needs.set-variables.outputs.ec2_image_name }}
       EC2_INSTANCE_TYPE: ${{ needs.set-variables.outputs.ec2_instance_type }}
       EC2_SSH_PORT: ${{ needs.set-variables.outputs.ec2_ssh_port }}
-
-      UPDATE_SUBNET_CIDR: ${{ inputs.update_subnets_cidr }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -160,7 +153,6 @@ jobs:
         run: |
           aws cloudformation deploy --template-file ./setup-pipelines/vpcParameters.yml --stack-name $APP_NAME-ssm-infrastructure-$ENVIRONMENT --parameter-overrides EnvironmentName=$ENVIRONMENT AppName=$APP_NAME \
                                     VpcCidr="$VPC_CIDR" VpcNamesForPrivate="$VPC_NAMES_FOR_PRIVATE" VpcNamesForPublic="$VPC_NAMES_FOR_PUBLIC" VpcMaskForPrivate=$VPC_MASK_FOR_PRIVATE VpcMaskForPublic=$VPC_MASK_FOR_PUBLIC \
-                                    UpdateSubnetCidr="$UPDATE_SUBNET_CIDR" \
                                     --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
           
           aws cloudformation deploy --template-file ./setup-pipelines/pipelines.yml --stack-name $APP_NAME-pipeline-infrastructure-$ENVIRONMENT --parameter-overrides EnvironmentName=$ENVIRONMENT AppName=$APP_NAME \
