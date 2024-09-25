@@ -121,13 +121,13 @@ Resources:
       Value: !Ref VPC
 
 Outputs:
-  StackNameOut:
+  StackName:
     Value: !Sub '${AWS::StackName}'
 
-  VPCIDOut:
+  VPCID:
     Value: !Ref VPC
 
-  VPCCIDROut:
+  VPCCIDR:
     Value: !Ref VpcCIDR
     Description: Data VPC CIDR
 
