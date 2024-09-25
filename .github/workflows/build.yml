@@ -7,9 +7,10 @@ on:
         type: environment
         required: true
       update_subnets_cidr:
-        description: 'Execute action for update subnets cidrs'
+        type: boolean
         required: true
-        default: 'false'
+        default: false
+        description: 'Execute action for update subnets cidrs'
 
 permissions:
   id-token: write
