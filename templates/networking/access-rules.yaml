@@ -106,7 +106,7 @@ Resources:
   ##############  Public subnet associations  ##############
   'Fn::ForEach::PublicSubnetRouteTableAssociations':
     - SubnetName
-    - !Ref PrivateSubnets
+    - !Ref PublicSubnets
     - 'PublicSubnet${SubnetName}RouteTableAssociation':
         Type: AWS::EC2::SubnetRouteTableAssociation
         Properties:
