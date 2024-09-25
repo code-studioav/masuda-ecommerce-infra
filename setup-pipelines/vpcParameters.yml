@@ -40,6 +40,7 @@ Mappings:
           Parameters:
             VpcCidr: !Ref VpcCidr
             SubnetMask: !Ref VpcMaskForPrivate
+            CacheBreaker: 'A'
     B:
       CidrIp:
         Fn::Transform:
@@ -47,6 +48,7 @@ Mappings:
           Parameters:
             VpcCidr: !Ref VpcCidr
             SubnetMask: !Ref VpcMaskForPrivate
+            CacheBreaker: 'B'
     C:
       CidrIp:
         Fn::Transform:
@@ -54,6 +56,7 @@ Mappings:
           Parameters:
             VpcCidr: !Ref VpcCidr
             SubnetMask: !Ref VpcMaskForPrivate
+            CacheBreaker: 'C'
   PublicSubnetMap:
     A:
       CidrIp:
