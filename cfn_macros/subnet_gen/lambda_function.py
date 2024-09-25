@@ -21,7 +21,7 @@ def handler(event, _):
         if not is_mask_in_range(cidr_mask, mask_to_apply):
             raise ValueError("The provided mask is not within the range of the given CIDR")
 
-        posible_ips = [str(ip) for ip in ipaddress.IPv4Network(f'{ip_base}{mask_to_apply}')]
+        posible_ips = [str(ip) for ip in ipaddress.IPv4Network(vpc_cidr)]
         posible_ips = list(filter(lambda ip: str(ip).endswith('.0'), posible_ips))
         base_ip = secrets.choice(posible_ips)
 
