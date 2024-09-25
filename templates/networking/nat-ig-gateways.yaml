@@ -2,7 +2,8 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::LanguageExtensions'
 Description: Internet Gateway configuration infra
 Parameters:
-
+  AppName:
+    Type: String
   Name:
     Type: String
     Description: An environment name that will be prefixed to resource names
@@ -51,7 +52,7 @@ Resources:
           AllocationId: !GetAtt 
             - !Sub 'ElasticIP${SubnetName}'
             - AllocationId
-          SubnetId: !Sub '{{resolve:ssm:/config/infra/${Name}/public_subnet/${SubnetName}}}'
+          SubnetId: !Sub '{{resolve:ssm:/config/infra/${AppName}/public_subnet/${SubnetName}}}'
           Tags:
             - Key: Name
               Value: !Sub ${Name}-nat-${SubnetName}

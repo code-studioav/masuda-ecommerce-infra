@@ -107,7 +107,7 @@ Resources:
       - 'Public${Property}${SubnetName}':
           Type: AWS::SSM::Parameter
           Properties:
-            Name: !Sub "/config/infra/${Name}/public_subnet/${SubnetName}"
+            Name: !Sub "/config/infra/${AppName}/public_subnet/${SubnetName}"
             Type: String
             Value: !GetAtt 
               - !Sub 'PublicSubnet${SubnetName}'
