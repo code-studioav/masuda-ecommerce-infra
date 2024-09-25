@@ -3,6 +3,10 @@ Transform: 'AWS::LanguageExtensions'
 Description: Configure associations to allow access to resource.
 
 Parameters:
+  AppName:
+    Type: String
+    ConstraintDescription: '[a-z]+'
+    Description: The project name.
   Name:
     Type: String
     Description: An environment name that will be prefixed to resource names
@@ -34,9 +38,10 @@ Parameters:
   VpcEnableS3Gateway:
     Type: String
     Description: Flag to create a vpc endpoint between nat gateway and s3
+    Default: 'true'
     AllowedValues:
-         - 'true'
-         - 'false'
+       - 'true'
+       - 'false'
 
 Conditions:
   CreateS3GatewayEndpoint: !Equals ['true', !Ref VpcEnableS3Gateway]
@@ -93,8 +98,9 @@ Resources:
     - 'PrivateSubnet${SubnetName}RouteTableAssociation':
         Type: AWS::EC2::SubnetRouteTableAssociation
         Properties:
-          SubnetId: Fn::ImportValue: 
-            'Fn::Sub': '${VpcStackName}-PrivateSubnet${SubnetName}'
+          SubnetId:
+            Fn::ImportValue: 
+              'Fn::Sub': '${VpcStackName}-PrivateSubnet${SubnetName}'
           RouteTableId: !Ref PrivateRouteTable
 
   ##############  Public subnet associations  ##############
@@ -104,8 +110,9 @@ Resources:
     - 'PublicSubnet${SubnetName}RouteTableAssociation':
         Type: AWS::EC2::SubnetRouteTableAssociation
         Properties:
-          SubnetId: Fn::ImportValue: 
-            'Fn::Sub': '${VpcStackName}-PublicSubnet${SubnetName}'
+          SubnetId:
+            Fn::ImportValue: 
+              'Fn::Sub': '${VpcStackName}-PublicSubnet${SubnetName}'
           RouteTableId: !Ref PublicRouteTable
 
   ##############  NATGATEWAY PRIVATE ASSOCIATIONS  ##############
@@ -117,13 +124,14 @@ Resources:
         Properties:
           RouteTableId: !Ref PrivateRouteTable
           DestinationCidrBlock: 0.0.0.0/0
-          NatGatewayId: Fn::ImportValue: 
-            'Fn::Sub': '${NatGatewatStackName}-NatGateway${SubnetName}'
+          NatGatewayId:
+            Fn::ImportValue: 
+              'Fn::Sub': '${NatGatewatStackName}-NatGateway${SubnetName}'
 
   SSMSecurityGroup:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub "/config/infra/${Name}/security-group"
+      Name: !Sub "/config/infra/${AppName}/security-group"
       Tier: "Standard"
       Type: "String"
       Value: !Ref SecurityGroup
