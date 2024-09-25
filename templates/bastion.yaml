@@ -8,8 +8,6 @@ Parameters:
     Type: String
   KeyPairSSM:
     Type: String
-  NatGateway:
-    Type: String
   PrivateRouteTable:
     Type: String
   VPCData:

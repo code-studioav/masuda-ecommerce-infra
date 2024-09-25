@@ -351,6 +351,7 @@ Resources:
                   - cloudformation:CreateChangeSet
                   - cloudformation:DeleteStack
                   - cloudformation:DeleteChangeSet
+                  - cloudformation:UpdateStack
                 Resource: '*'
               - Effect: Allow
                 Resource: 'arn:aws:s3:::*'

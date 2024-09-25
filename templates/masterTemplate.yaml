@@ -139,7 +139,6 @@ Resources:
         EnvironmentName: !Ref EnvironmentName
         AppName: !Ref AppName
         Name: !Sub ${EnvironmentName}-${AppName}-Business
-        NatGateway: !GetAtt StackNatIG.Outputs.NatGateway
         PrivateRouteTable: !GetAtt StackAccessNetworkRules.Outputs.PrivateRouteTable
         VPCData: !GetAtt StackVPCNetwork.Outputs.VPCID
         KeyPairSSM: !Sub '/config/infra/${AppName}/key-pair'
