@@ -166,7 +166,7 @@ jobs:
     name: Deploy ${{ inputs.environment }} AWS
     environment: ${{ inputs.environment }}
     runs-on: ubuntu-latest
-    needs: [set-variables]
+    needs: [set-variables, deploy-pipeline]
     env: 
       ENVIRONMENT: ${{ inputs.environment }}
       AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
