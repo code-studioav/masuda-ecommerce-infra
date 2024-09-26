@@ -31,57 +31,6 @@ Parameters:
     Type: String
     Description: Mask to apply to public subnets
     Default: '/24'
-Mappings:
-  PrivateSubnetMap:
-    A:
-      CidrIp:
-        Fn::Transform:
-          Name: 'subnet-generator'
-          Parameters:
-            VpcCidr: !Ref VpcCidr
-            SubnetMask: !Ref VpcMaskForPrivate
-            CacheBreaker: 'A'
-    B:
-      CidrIp:
-        Fn::Transform:
-          Name: 'subnet-generator'
-          Parameters:
-            VpcCidr: !Ref VpcCidr
-            SubnetMask: !Ref VpcMaskForPrivate
-            CacheBreaker: 'B'
-    C:
-      CidrIp:
-        Fn::Transform:
-          Name: 'subnet-generator'
-          Parameters:
-            VpcCidr: !Ref VpcCidr
-            SubnetMask: !Ref VpcMaskForPrivate
-            CacheBreaker: 'C'
-  PublicSubnetMap:
-    A:
-      CidrIp:
-        Fn::Transform:
-          Name: 'subnet-generator'
-          Parameters:
-            VpcCidr: !Ref VpcCidr
-            SubnetMask: !Ref VpcMaskForPublic
-            CacheBreaker: 'PA'
-    B:
-      CidrIp:
-        Fn::Transform:
-          Name: 'subnet-generator'
-          Parameters:
-            VpcCidr: !Ref VpcCidr
-            SubnetMask: !Ref VpcMaskForPublic
-            CacheBreaker: 'PB'
-    C:
-      CidrIp:
-        Fn::Transform:
-          Name: 'subnet-generator'
-          Parameters:
-            VpcCidr: !Ref VpcCidr
-            SubnetMask: !Ref VpcMaskForPublic
-            CacheBreaker: 'PC'
   
 Resources:
   SSMVpcNetworkCidr:
@@ -100,10 +49,13 @@ Resources:
           Name: !Sub '/config/infra/${AppName}/vpc-networking/cidr-private-subnet/${SubnetName}'
           Tier: Standard
           Type: String
-          Value: !FindInMap 
-            - PrivateSubnetMap
-            - !Ref SubnetName
-            - CidrIp
+          Value: 
+            Fn::Transform:
+              Name: 'validate-ssm-subnet'
+              Parameters:
+                Path: !Sub '/config/infra/${AppName}/vpc-networking/cidr-private-subnet/${SubnetName}'
+                VpcCidr: !Ref VpcCidr
+                SubnetMask: !Ref VpcMaskForPrivate
   'Fn::ForEach::PublicSubnets':
     - SubnetName
     - !Ref VpcNamesForPublic
@@ -113,8 +65,11 @@ Resources:
           Name: !Sub '/config/infra/${AppName}/vpc-networking/cidr-public-subnet/${SubnetName}'
           Tier: Standard
           Type: String
-          Value: !FindInMap 
-            - PublicSubnetMap
-            - !Ref SubnetName
-            - CidrIp
+          Value:
+            Fn::Transform:
+              Name: 'validate-ssm-subnet'
+              Parameters:
+                Path: !Sub '/config/infra/${AppName}/vpc-networking/cidr-public-subnet/${SubnetName}'
+                VpcCidr: !Ref VpcCidr
+                SubnetMask: !Ref VpcMaskForPublic
   

@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This stack create a CFN macro for validate an existing SSM.
+Parameters:
+  EnvironmentName:
+    Type: String
+  AppName:
+    Type: String
+Resources:
+  ValidateSSMSubnetRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: 'sts:AssumeRole'
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      Path: /
+      Policies:
+        -
+          PolicyName: !Sub '${EnvironmentName}-${AppName}-lambda-execution-rol'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - logs:DescribeLogStreams
+                Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*
+        -
+          PolicyName: !Sub '${EnvironmentName}-${AppName}-lambda-ssm-permission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:*
+                Resource: '*'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSLambdaExecute
+  ValidateSSMSubnet:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.11
+      Handler: index.handler
+      Code:
+        ZipFile: !Rain::Embed lambda_function.py
+      Role: !GetAtt ValidateSSMSubnetRole.Arn
+      FunctionName: !Sub "${EnvironmentName}-${AppName}-cfn-validate-ssm-subnet"
+      MemorySize: 128
+      Timeout: 15
+      Environment:
+        Variables:
+          ENVIRONMENT: !Ref EnvironmentName
+          APP_NAME: !Ref AppName
+  LGCValidateSSMSubnet:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${ValidateSSMSubnet}
+      RetentionInDays: 5
+  MacroValidateSSMSubnet:
+    Type: AWS::CloudFormation::Macro
+    Properties:
+      Description: A macro for read ssm from path
+      FunctionName: !GetAtt ValidateSSMSubnet.Arn
+      Name: 'validate-ssm-subnet'
