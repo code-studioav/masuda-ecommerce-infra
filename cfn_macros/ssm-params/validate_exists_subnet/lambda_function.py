@@ -27,7 +27,7 @@ def handler(event, _):
         mask_to_apply = params.get('SubnetMask', 'not-valid')
         
         parameter = ssm.get_parameter(Name=ssm_path)['Parameter']
-        subnet_cidr = parameter.get('value', 'bad-value')
+        subnet_cidr = parameter.get('Value', 'bad-value')
         ipaddress.IPv4Network(subnet_cidr)
 
         response["fragment"] = subnet_cidr
