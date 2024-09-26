@@ -115,19 +115,6 @@ Resources:
               'Fn::Sub': '${VpcStackName}-PublicSubnet${SubnetName}'
           RouteTableId: !Ref PublicRouteTable
 
-  ##############  NATGATEWAY PRIVATE ASSOCIATIONS  ##############
-  'Fn::ForEach::NatGatewaysAssociation':
-    - SubnetName
-    - !Ref PublicSubnets
-    - 'NatGateway${SubnetName}Association':
-        Type: AWS::EC2::Route
-        Properties:
-          RouteTableId: !Ref PrivateRouteTable
-          DestinationCidrBlock: 0.0.0.0/0
-          NatGatewayId:
-            Fn::ImportValue: 
-              'Fn::Sub': '${NatGatewatStackName}-NatGateway${SubnetName}'
-
   SSMSecurityGroup:
     Type: AWS::SSM::Parameter
     Properties:
