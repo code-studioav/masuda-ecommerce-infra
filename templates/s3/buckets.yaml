@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  EnvironmentName:
+    Type: String
+  AppName:
+    Type: String
+Resources:
+  EcommerceDocumentationBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Sub '${EnvironmentName}-${AppName}-ecommerce-documents-${AWS::AccountId}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+  EcommerceDocumentationBucketPolicy:
+    Type: "AWS::S3::BucketPolicy"
+    Properties:
+      Bucket: !Ref EcommerceDocumentationBucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action: "s3:*"
+            Resource: !Sub "arn:aws:s3:::${EcommerceDocumentationBucket}/*"
+          - Effect: Deny
+            Principal:
+              AWS: "*"
+            Action: "*"
+            Resource: !Sub "arn:aws:s3:::${EcommerceDocumentationBucket}/*"
+            Condition:
+              Bool:
+                "aws:SecureTransport": false
+
+Outputs:
+  EcommerceDocumentationBucketId:
+    Value: !Ref EcommerceDocumentationBucket
+    Description: Logical Id for the EcommerceDocumentationBucket
+  EcommerceDocumentationBucketArn:
+    Value: !GetAtt
+      - EcommerceDocumentationBucket
+      - Arn
+    Description: Arn for the EcommerceDocumentationBucket
