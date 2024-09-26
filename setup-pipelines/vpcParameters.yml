@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::LanguageExtensions'
-Description: JSON string
+Description: Save parameter used while creating stacks
 Parameters:
   EnvironmentName:
     Type: String
@@ -31,6 +31,57 @@ Parameters:
     Type: String
     Description: Mask to apply to public subnets
     Default: '/24'
+Mappings:
+  PrivateSubnetMap:
+    A:
+      CidrIp:
+        Fn::Transform:
+          Name: 'validate-ssm-subnet'
+          Parameters:
+            Path: !Sub '/config/infra/${AppName}/vpc-networking/cidr-private-subnet/A'
+            VpcCidr: !Ref VpcCidr
+            SubnetMask: !Ref VpcMaskForPrivate
+    B:
+      CidrIp:
+        Fn::Transform:
+          Name: 'validate-ssm-subnet'
+          Parameters:
+            Path: !Sub '/config/infra/${AppName}/vpc-networking/cidr-private-subnet/B'
+            VpcCidr: !Ref VpcCidr
+            SubnetMask: !Ref VpcMaskForPrivate
+    C:
+      CidrIp:
+        Fn::Transform:
+          Name: 'validate-ssm-subnet'
+          Parameters:
+            Path: !Sub '/config/infra/${AppName}/vpc-networking/cidr-private-subnet/C'
+            VpcCidr: !Ref VpcCidr
+            SubnetMask: !Ref VpcMaskForPrivate
+  PublicSubnetMap:
+    A:
+      CidrIp:
+        Fn::Transform:
+          Name: 'validate-ssm-subnet'
+          Parameters:
+            Path: !Sub '/config/infra/${AppName}/vpc-networking/cidr-public-subnet/A'
+            VpcCidr: !Ref VpcCidr
+            SubnetMask: !Ref VpcMaskForPublic
+    B:
+      CidrIp:
+        Fn::Transform:
+          Name: 'validate-ssm-subnet'
+          Parameters:
+            Path: !Sub '/config/infra/${AppName}/vpc-networking/cidr-public-subnet/B'
+            VpcCidr: !Ref VpcCidr
+            SubnetMask: !Ref VpcMaskForPublic
+    C:
+      CidrIp:
+        Fn::Transform:
+          Name: 'validate-ssm-subnet'
+          Parameters:
+            Path: !Sub '/config/infra/${AppName}/vpc-networking/cidr-public-subnet/C'
+            VpcCidr: !Ref VpcCidr
+            SubnetMask: !Ref VpcMaskForPublic
   
 Resources:
   SSMVpcNetworkCidr:
@@ -49,18 +100,10 @@ Resources:
           Name: !Sub '/config/infra/${AppName}/vpc-networking/cidr-private-subnet/${SubnetName}'
           Tier: Standard
           Type: String
-          Value: 
-            Fn::Transform:
-              Name: 'validate-ssm-subnet'
-              Parameters:
-                Path: !Join
-                  - '/'
-                  - - '/config/infra'
-                    - !Ref AppName
-                    - 'vpc-networking/cidr-private-subnet'
-                    - !Ref SubnetName
-                VpcCidr: !Ref VpcCidr
-                SubnetMask: !Ref VpcMaskForPrivate
+          Value: !FindInMap 
+            - PrivateSubnetMap
+            - !Ref SubnetName
+            - CidrIp
   'Fn::ForEach::PublicSubnets':
     - SubnetName
     - !Ref VpcNamesForPublic
@@ -70,16 +113,8 @@ Resources:
           Name: !Sub '/config/infra/${AppName}/vpc-networking/cidr-public-subnet/${SubnetName}'
           Tier: Standard
           Type: String
-          Value:
-            Fn::Transform:
-              Name: 'validate-ssm-subnet'
-              Parameters:
-                Path: !Join
-                  - '/'
-                  - - '/config/infra'
-                    - !Ref AppName
-                    - 'vpc-networking/cidr-public-subnet'
-                    - !Ref SubnetName
-                VpcCidr: !Ref VpcCidr
-                SubnetMask: !Ref VpcMaskForPublic
+          Value: !FindInMap 
+            - PublicSubnetMap
+            - !Ref SubnetName
+            - CidrIp
   
