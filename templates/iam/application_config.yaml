@@ -16,26 +16,7 @@ Resources:
         - Key: environment
           Value: !Ref EnvironmentName
       UserName: !Sub '${EnvironmentName}-${AppName}-platform-application-user'
-      Policies:
-        - PolicyName: !Sub ${EnvironmentName}-${AppName}-bucket-full-access
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Action:
-                  - s3:*
-                Resource:
-                  - !Ref EcommerBucketAccess
-                  - !Sub '${EcommerBucketAccess}/*'
-        - PolicyName: !Sub ${EnvironmentName}-${AppName}-variables-access
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Action:
-                  - secretsmanager:GetSecretValue
-                Resource:
-                  - !Ref EcommerceIamUserCredentialsSecret
+  
   EcommerceIamAccessKeys:
     Type: AWS::IAM::AccessKey
     Properties:
@@ -50,6 +31,27 @@ Resources:
         - '{"AccessKeyId":"${UserName}", "SecretAccessKey":"${Password}"}'
         - UserName: !Ref EcommerceIamAccessKeys
           Password: !GetAtt EcommerceIamAccessKeys.SecretAccessKey
+  
+  EcommerceIamPrincipalPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub ${EnvironmentName}-${AppName}-platform-resources-access
+      Users:
+        - !Ref EcommerceIamAccessKeys
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:*
+            Resource:
+              - !Ref EcommerBucketAccess
+              - !Sub '${EcommerBucketAccess}/*'
+          - Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource:
+              - !Ref EcommerceIamUserCredentialsSecret
 
 Outputs:
   EcommerceIamUserName:
