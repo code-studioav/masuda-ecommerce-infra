@@ -43,7 +43,7 @@ Resources:
                 - !GetAtt EcommerceIamUser.Arn
             Action: sts:AssumeRole
       Policies:
-        - PolicyName: !Sub ${EnvironmentName}-${AppName}-${Country}-bucket-access
+        - PolicyName: !Sub ${EnvironmentName}-${AppName}-bucket-access
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
