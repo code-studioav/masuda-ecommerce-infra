@@ -29,7 +29,7 @@ Resources:
       SecretString: !Sub
         - '{"AccessKeyId":"${UserName}", "SecretAccessKey":"${Password}"}'
         - UserName: !Ref EcommerceIamAccessKeys
-        - Password: !GetAtt EcommerceIamAccessKeys.SecretAccessKey
+          Password: !GetAtt EcommerceIamAccessKeys.SecretAccessKey
   EcommerceIamRole:
     Type: AWS::IAM::Role
     Properties:
