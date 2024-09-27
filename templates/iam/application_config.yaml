@@ -16,6 +16,26 @@ Resources:
         - Key: environment
           Value: !Ref EnvironmentName
       UserName: !Sub '${EnvironmentName}-${AppName}-platform-application-user'
+      Policies:
+        - PolicyName: !Sub ${EnvironmentName}-${AppName}-bucket-full-access
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:*
+                Resource:
+                  - !Ref EcommerBucketAccess
+                  - !Sub '${EcommerBucketAccess}/*'
+        - PolicyName: !Sub ${EnvironmentName}-${AppName}-variables-access
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource:
+                  - !Ref EcommerceIamUserCredentialsSecret
   EcommerceIamAccessKeys:
     Type: AWS::IAM::AccessKey
     Properties:
@@ -30,38 +50,6 @@ Resources:
         - '{"AccessKeyId":"${UserName}", "SecretAccessKey":"${Password}"}'
         - UserName: !Ref EcommerceIamAccessKeys
           Password: !GetAtt EcommerceIamAccessKeys.SecretAccessKey
-  EcommerceIamRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub '${EnvironmentName}-${AppName}-principal-platform-role'
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              AWS:
-                - !GetAtt EcommerceIamUser.Arn
-            Action: sts:AssumeRole
-      Policies:
-        - PolicyName: !Sub ${EnvironmentName}-${AppName}-bucket-access
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Action:
-                  - s3:ListBucket
-                Resource:
-                  - !Ref EcommerBucketAccess
-              - Effect: Allow
-                Action:
-                  - s3:*Object
-                Resource:
-                  - !Sub '${EcommerBucketAccess}/*'
-              - Effect: Allow
-                Action:
-                  - secretsmanager:GetSecretValue
-                Resource:
-                  - !Ref EcommerceIamUserCredentialsSecret
 
 Outputs:
   EcommerceIamUserName:
