@@ -175,7 +175,7 @@ Resources:
     Properties:
       TemplateURL: !Sub 'https://{{resolve:ssm:/config/${EnvironmentName}/${AppName}/infra/bucket/artifacts}}.s3.${AWS::URLSuffix}/${AppName}/deploys/networking-db/infra/s3/buckets.yaml'
       Parameters:
-        Environment: !Ref EnvironmentName
+        EnvironmentName: !Ref EnvironmentName
         AppName: !Ref AppName
       TimeoutInMinutes: 60
   
@@ -184,7 +184,7 @@ Resources:
     Properties:
       TemplateURL: !Sub 'https://{{resolve:ssm:/config/${EnvironmentName}/${AppName}/infra/bucket/artifacts}}.s3.${AWS::URLSuffix}/${AppName}/deploys/networking-db/infra/iam/application_config.yaml'
       Parameters:
-        Environment: !Ref EnvironmentName
+        EnvironmentName: !Ref EnvironmentName
         AppName: !Ref AppName
         EcommerBucketAccess: !GetAtt StackS3Buckets.Outputs.EcommerceDocumentationBucketArn
       TimeoutInMinutes: 60
