@@ -24,7 +24,7 @@ Resources:
   EcommerceIamUserCredentialsSecret:
     Type: 'AWS::SecretsManager::Secret'
     Properties:
-      Name: !Sub "${Environment}-${AppName}-app-user-credentials"
+      Name: !Sub "${EnvironmentName}-${AppName}-app-user-credentials"
       Description: This secret store the credentials of the IAM user for this app.
       SecretString: !Sub
         - '{"AccessKeyId":"${UserName}", "SecretAccessKey":"${Password}"}'
