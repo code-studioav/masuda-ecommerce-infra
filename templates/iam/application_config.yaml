@@ -51,7 +51,7 @@ Resources:
             Action:
               - secretsmanager:GetSecretValue
             Resource:
-              - !Ref EcommerceIamUserCredentialsSecret
+              - !Ref EcommerceIamUser
 
 Outputs:
   EcommerceIamUserName:
