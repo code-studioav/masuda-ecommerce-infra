@@ -37,7 +37,7 @@ Resources:
     Properties:
       PolicyName: !Sub ${EnvironmentName}-${AppName}-platform-resources-access
       Users:
-        - !Ref EcommerceIamAccessKeys
+        - !Ref EcommerceIamUser
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -51,7 +51,7 @@ Resources:
             Action:
               - secretsmanager:GetSecretValue
             Resource:
-              - !Ref EcommerceIamUser
+              - !Ref EcommerceIamUserCredentialsSecret
 
 Outputs:
   EcommerceIamUserName:
