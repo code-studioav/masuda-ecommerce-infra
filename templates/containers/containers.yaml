@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  EnvironmentName:
+    Type: String
+  AppName:
+    Type: String
+
+Conditions:
+  IsProd: !Equals
+    - !Ref EnvironmentName
+    - prod
+
+Resources:
+  ContainerRegistry:
+   Type: AWS::ECR::Repository
+   Properties:
+    RepositoryName: !Sub '${EnvironmentName}-${AppName}/ecommerce-web'
+    ImageTagMutability: !If [IsProd, 'IMMUTABLE', 'MUTABLE']
+    ImageScanningConfiguration:
+      ScanOnPush: true
+    EmptyOnDelete: !If [IsProd, true, false]
+    RepositoryPolicyText:
+      Version: "2012-10-17"
+      Statement: 
+        - 
+          Sid: AllowPushPull
+          Effect: Allow
+          Principal:
+            Service: 'ecs-tasks.amazonaws.com'
+          Action:
+            - ecr:GetDownloadUrlForLayer
+            - ecr:BatchGetImage
+            - ecr:BatchCheckLayerAvailability
+            - ecr:GetAuthorizationToken
+    Tags:
+      - Key: 'environment'
+        Value: !Ref EnvironmentName
+      - Key: 'app'
+        Value: !Ref AppName
+  
+  ContainerRegistrySSM:
+    Type: 'AWS::SSM::Parameter'
+    Properties:
+      Name: !Sub '/${EnvironmentName}/${AppName}/container/registry/repository/url'
+      Tier: Standard
+      Type: String
+      Value: !GetAtt ContainerRegistry.RepositoryUri
+
+Outputs:
+  ContainerRegistryUrl:
+    Description: The URL of the ECR repository
+    Value: !GetAtt ContainerRegistry.RepositoryUri
+  ContainerArn:
+    Value: !GetAtt ContainerRegistry.Arn

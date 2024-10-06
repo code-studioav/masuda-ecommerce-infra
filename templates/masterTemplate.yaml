@@ -189,4 +189,14 @@ Resources:
         EcommerBucketAccess: !GetAtt StackS3Buckets.Outputs.EcommerceDocumentationBucketArn
       TimeoutInMinutes: 60
   
+  StackContainers:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://{{resolve:ssm:/config/${EnvironmentName}/${AppName}/infra/bucket/artifacts}}.s3.${AWS::URLSuffix}/${AppName}/deploys/networking-db/infra/containers/containers.yaml'
+      Parameters:
+        EnvironmentName: !Ref EnvironmentName
+        AppName: !Ref AppName
+      TimeoutInMinutes: 60
+
+  
   
