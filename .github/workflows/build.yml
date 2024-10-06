@@ -103,13 +103,14 @@ jobs:
           echo Unzipping rain-cli.zip file ...
           unzip -o -q -d . rain-cli.zip
 
-          ./rain --version
+          mv rain-v1.15.0_linux-amd64 rain-cli
+          ./rain-cli/rain --version
 
       - name:  Package and deploy 
         run: |
           for t in $(find ./cfn_macros -name '*.yaml' -or -name '*.json');
             do
-              ./rain pkg $t --output $t
+              ./rain-cli/rain pkg $t --output $t
               sub_path=${t#"./cfn_macros/"}
               stack_name_preview="${sub_path/'/register_macro.yaml'/''}"
               stack_name="${stack_name_preview/'/'/'-'}"
