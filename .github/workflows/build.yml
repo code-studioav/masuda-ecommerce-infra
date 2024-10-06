@@ -97,7 +97,7 @@ jobs:
       - name: Install aws rain package
         run: |
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          brew install rain
+          brew install rain@1.15.0
       - name:  Package and deploy 
         run: |
           for t in $(find ./cfn_macros -name '*.yaml' -or -name '*.json');
