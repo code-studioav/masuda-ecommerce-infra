@@ -196,6 +196,8 @@ Resources:
       Parameters:
         EnvironmentName: !Ref EnvironmentName
         AppName: !Ref AppName
+        VPCData: !GetAtt StackVPCNetwork.Outputs.VPCID
+        InstanceType: !Ref Ec2InstanceType
       TimeoutInMinutes: 60
 
   
