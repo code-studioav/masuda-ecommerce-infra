@@ -119,6 +119,19 @@ Resources:
       Path: /
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: !Sub '${EnvironmentName}-${AppName}-ecs-task-pull-ecr'
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:BatchGetImage
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:GetAuthorizationToken
+                Resource:
+                  - !GetAtt ContainerRegistry.Arn
   
   LogGroup:
     Type: AWS::Logs::LogGroup
@@ -151,7 +164,7 @@ Resources:
           - !Ref EnvironmentName
           - TaskDefinition
           - Memory
-          Image: !GetAtt ContainerRegistry.RepositoryUri
+          Image: !Sub '${ContainerRegistry.RepositoryUri}:${EnvironmentName}-latest' 
           PortMappings:
             - ContainerPort: !Ref ContainerPort
               HostPort: !Ref ContainerPort
