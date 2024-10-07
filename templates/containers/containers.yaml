@@ -269,7 +269,7 @@ Outputs:
     Value: !GetAtt ContainerRegistry.Arn
   ClusterName:
     Description: The ECS cluster into which to launch resources
-    Value: !Ref 
+    Value: !Ref ECSCluster
   ECSTaskExecutionRole:
     Description: The role used to start up a task
     Value: !Ref ECSTaskExecutionRole
