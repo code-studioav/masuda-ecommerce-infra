@@ -159,6 +159,7 @@ Resources:
         BastionSG: !If [CreateBastion, !GetAtt StackBastion.Outputs.BastionSG, '-']
         BastionCreated: !Ref EC2CreateBastion
         BusinessSG: !GetAtt StackAccessNetworkRules.Outputs.SG
+        ApplicationSG: !GetAtt StackContainers.Outputs.ServiceSGId
         VPCData: !GetAtt StackVPCNetwork.Outputs.VPCID
 
         RdsInstanceClass: !Ref RdsInstanceClass

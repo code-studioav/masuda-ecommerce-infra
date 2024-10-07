@@ -18,6 +18,8 @@ Parameters:
   BastionSG:
     Type: String
     Default: "-"
+  ApplicationSG:
+    Type: String
 
   VPCData:
     Type: AWS::EC2::VPC::Id
@@ -158,12 +160,16 @@ Resources:
           IpProtocol: tcp
           SourceSecurityGroupId: !Ref BusinessSG
           ToPort: !Ref DbPort
+        - FromPort: !Ref DbPort
+          IpProtocol: tcp
+          SourceSecurityGroupId: !Ref ApplicationSG
+          ToPort: !Ref DbPort
         - !If
           - AssociateBastion
-          - FromPort: 5432
+          - FromPort: !Ref DbPort
             IpProtocol: tcp
             SourceSecurityGroupId: !Ref BastionSG
-            ToPort: 5432
+            ToPort: !Ref DbPort
           - !Ref AWS::NoValue
 Outputs:
   DBEndpoint:

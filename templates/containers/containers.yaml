@@ -286,3 +286,6 @@ Outputs:
   ECSTaskExecutionRole:
     Description: The role used to start up a task
     Value: !Ref ECSTaskExecutionRole
+  ServiceSGId:
+    Description: The ECS service security group associated
+    Value: !GetAtt ServiceSecurityGroup.GroupId
