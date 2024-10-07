@@ -119,6 +119,12 @@ Resources:
       Name: !Sub "/config/infra/${AppName}/vpc_id"
       Type: String
       Value: !Ref VPC
+  
+  ServiceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for service
+      VpcId: !Ref VPC
 
 Outputs:
   StackName:
@@ -130,6 +136,10 @@ Outputs:
   VPCCIDR:
     Value: !Ref VpcCIDR
     Description: Data VPC CIDR
+  
+  ServiceSGId:
+    Description: The ECS service security group associated
+    Value: !GetAtt ServiceSecurityGroup.GroupId
 
   'Fn::ForEach::PrivateSubnetOutputs':
     - SubnetName

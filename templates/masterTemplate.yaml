@@ -159,7 +159,7 @@ Resources:
         BastionSG: !If [CreateBastion, !GetAtt StackBastion.Outputs.BastionSG, '-']
         BastionCreated: !Ref EC2CreateBastion
         BusinessSG: !GetAtt StackAccessNetworkRules.Outputs.SG
-        ApplicationSG: !GetAtt StackContainers.Outputs.ServiceSGId
+        ApplicationSG: !GetAtt StackVPCNetwork.Outputs.ServiceSGId
         VPCData: !GetAtt StackVPCNetwork.Outputs.VPCID
 
         RdsInstanceClass: !Ref RdsInstanceClass
@@ -198,6 +198,7 @@ Resources:
         EnvironmentName: !Ref EnvironmentName
         AppName: !Ref AppName
         VPCData: !GetAtt StackVPCNetwork.Outputs.VPCID
+        ApplicationSG: !GetAtt StackVPCNetwork.Outputs.ServiceSGId
         InstanceType: !Ref Ec2InstanceType
       TimeoutInMinutes: 60
 

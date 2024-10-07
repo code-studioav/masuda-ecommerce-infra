@@ -7,6 +7,8 @@ Parameters:
   VPCData:
     Description: VPCID of data
     Type: String
+  ApplicationSG:
+    Type: String
   ECSAMI:
     Description: The Amazon Machine Image ID used for the cluster
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
@@ -177,12 +179,6 @@ Resources:
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: ecs
 
-  ServiceSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Security group for service
-      VpcId: !Ref VPCData
-
   PublicLoadBalancerSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -243,7 +239,7 @@ Resources:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
       Description: Ingress from the public ALB
-      GroupId: !Ref ServiceSecurityGroup
+      GroupId: !Ref ApplicationSG
       IpProtocol: -1
       SourceSecurityGroupId: !Ref PublicLoadBalancerSG
 
@@ -258,7 +254,7 @@ Resources:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
           SecurityGroups:
-            - !Ref ServiceSecurityGroup
+            - !Ref ApplicationSG
           Subnets:
             Fn::Transform:
               Name: 'read-ssm-from-path'
@@ -286,6 +282,3 @@ Outputs:
   ECSTaskExecutionRole:
     Description: The role used to start up a task
     Value: !Ref ECSTaskExecutionRole
-  ServiceSGId:
-    Description: The ECS service security group associated
-    Value: !GetAtt ServiceSecurityGroup.GroupId
