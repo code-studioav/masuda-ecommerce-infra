@@ -17,7 +17,7 @@ engine = "postgres"
 version = "16.4"
 
 [rds.database.config]
-db_name = "masuda_ecommerce"
+db_name = "masuda_db"
 db_user_name = "masudaAdminUser"
 db_port = "5432"
 
