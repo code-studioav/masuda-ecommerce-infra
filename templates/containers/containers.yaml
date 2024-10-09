@@ -296,6 +296,12 @@ Outputs:
   ClusterName:
     Description: The ECS cluster into which to launch resources
     Value: !Ref ECSCluster
+  ServiceName:
+    Description: The ECS cluster into which to launch resources
+    Value: !GetAtt ECSService.Name
+  ServiceArn:
+    Description: The ECS cluster into which to launch resources
+    Value: !Ref ECSService
   ECSTaskExecutionRole:
     Description: The role used to start up a task
     Value: !Ref ECSTaskExecutionRole

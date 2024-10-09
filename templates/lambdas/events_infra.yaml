@@ -1,0 +1,95 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  EnvironmentName:
+    Type: String
+  AppName:
+    Type: String
+  ECSServiceName:
+    Type: String
+  ECSServiceArn:
+    Type: String
+  ECSClusterName:
+    Type: String
+  ECRImageArn:
+    Type: String
+
+Resources:
+  EventsInfraLambdaExecutionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: 'sts:AssumeRole'
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      Path: /
+      Policies:
+        -
+          PolicyName: !Sub '${EnvironmentName}-${AppName}-update-ecs-policy'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ecs:UpdateService
+                Resource: !Ref ECSServiceArn
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSLambdaExecute
+        - arn:aws:iam::aws:policy/AWSLambdaVPCAccessExecutionRole
+  ForceUpdateEcsLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.11
+      Handler: index.handler
+      Code:
+        ZipFile: !Rain::Embed lambdas/events_infra.py
+      Role: !GetAtt EventsInfraLambdaExecutionRole.Arn
+      FunctionName: !Sub "${EnvironmentName}-${AppName}-force-update-ecs-at-push-ecr"
+      MemorySize: 128
+      Timeout: 5
+      Environment:
+        Variables:
+          ENVIRONMENT: !Ref EnvironmentName
+          APP_NAME: !Ref AppName
+  LGCForceUpdateEcsLambda:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${ForceUpdateEcsLambda}
+      RetentionInDays: 5
+  
+  EcrPushEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub ${EnvironmentName}-${AppName}-EcrPushEventRule
+      Description: Rule to trigger force update ecs at ecr push
+      EventPattern:
+        source:
+          - aws.ecr
+        detail-type:
+          - 'ECR Image Action'
+        resources:
+          - !Ref ECRImageArn
+        detail:
+          action-type:
+            - PUSH
+          result:
+            - SUCCESS
+          image-tag:
+            - !Sub '${EnvironmentName}-latest'
+      Targets:
+        - Arn: !GetAtt ForceUpdateEcsLambda.Arn
+          Id: ForceUpdateEcsLambdaEventRuleTarget
+          Input: !Sub '{"ECSServiceName": "${ECSServiceName}","ECSClusterName": "${ECSClusterName}"}'
+      EventBusName: "default"
+      State: "ENABLED"
+  
+  LambdaForceUpdateEcsLambdaForEventBridge:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt ForceUpdateEcsLambda.Arn
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt EcrPushEventRule.Arn

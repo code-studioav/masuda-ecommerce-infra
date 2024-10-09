@@ -201,6 +201,19 @@ Resources:
         ApplicationSG: !GetAtt StackVPCNetwork.Outputs.ServiceSGId
         InstanceType: !Ref Ec2InstanceType
       TimeoutInMinutes: 60
+  
+  StackEventsLambdas:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://{{resolve:ssm:/config/${EnvironmentName}/${AppName}/infra/bucket/artifacts}}.s3.${AWS::URLSuffix}/${AppName}/deploys/networking-db/infra/lambdas/events_infra.yaml'
+      Parameters:
+        EnvironmentName: !Ref EnvironmentName
+        AppName: !Ref AppName
+        ECSServiceName: !GetAtt StackContainers.Outputs.ServiceName
+        ECSClusterName: !GetAtt StackContainers.Outputs.ClusterName
+        ECSServiceArn: !GetAtt StackContainers.Outputs.ServiceArn
+        ECRImageArn: !Ref StackContainers.Outputs.ContainerArn
+      TimeoutInMinutes: 60
 
   
   
