@@ -38,7 +38,7 @@ Resources:
                 Resource: !Ref ECSServiceArn
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AWSLambdaExecute
-        - arn:aws:iam::aws:policy/AWSLambdaVPCAccessExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
   ForceUpdateEcsLambda:
     Type: AWS::Lambda::Function
     Properties:
