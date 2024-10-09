@@ -396,6 +396,7 @@ Resources:
                   - 'amplify:*'
                   - 'ecr:*'
                   - 'ecs:*'
+                  - 'events:*'
                 Resource: '*'
   SSMBucketArtifacts:
     Type: 'AWS::SSM::Parameter'
