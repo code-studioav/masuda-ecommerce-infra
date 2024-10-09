@@ -98,7 +98,7 @@ jobs:
         id: cache-rain-install
         uses: actions/cache@v4
         with:
-          path: rain-cli
+          path: ./rain-cli
           key: ${{ runner.os }}-rain-pkg
       - name: Install aws rain package
         if: steps.cache-rain-install.outputs.cache-hit != 'true'
@@ -163,6 +163,7 @@ jobs:
           aws-region: ${{env.AWS_REGION}}
       - name:  Setup Parameters 
         run: |
+          ls -al
           for t in $(find ./templates/lambdas -name '*.yaml' -or -name '*.json');
             do
               ./rain-cli/rain pkg $t --output $t
