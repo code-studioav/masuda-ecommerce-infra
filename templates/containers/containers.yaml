@@ -185,6 +185,8 @@ Resources:
           - TaskDefinition
           - Memory
           Image: !Sub '${ContainerRegistry.RepositoryUri}:${EnvironmentName}-latest' 
+          LinuxParameters:
+            InitProcessEnabled: true
           PortMappings:
             - ContainerPort: !Ref ContainerPort
               HostPort: !Ref ContainerPort
