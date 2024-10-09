@@ -207,15 +207,15 @@ Resources:
   ServiceTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      HealthCheckIntervalSeconds: 6
+      HealthCheckIntervalSeconds: 150
       HealthCheckPath: /
       HealthCheckProtocol: HTTP
-      HealthCheckTimeoutSeconds: 5
+      HealthCheckTimeoutSeconds: 150
       HealthyThresholdCount: 2
       TargetType: ip
       Port: !Ref ContainerPort
       Protocol: HTTP
-      UnhealthyThresholdCount: 10
+      UnhealthyThresholdCount: 5
       # TODO: Si queremos separar las VPC, se tiene crear una para la aplicacion y conectarlas por medio de un VPCPeering connection
       VpcId: !Ref VPCData
       TargetGroupAttributes:
