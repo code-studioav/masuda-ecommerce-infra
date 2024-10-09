@@ -75,23 +75,24 @@ Resources:
               - ecr:BatchGetImage
               - ecr:BatchCheckLayerAvailability
               - ecr:GetAuthorizationToken
-      LifecyclePolicy: |
-        {
-          "rules": [
-            {
-              "rulePriority": 1,
-              "description": "Keep the previous untagged image, expire all others",
-              "selection": {
-                "tagStatus": "untagged",
-                "countType": "imageCountMoreThan",
-                "countNumber": 1
-              },
-              "action": {
-                "type": "expire"
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep the previous untagged image, expire all others",
+                "selection": {
+                  "tagStatus": "untagged",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 1
+                },
+                "action": {
+                  "type": "expire"
+                }
               }
-            }
-          ]
-        }
+            ]
+          }
       Tags:
         - Key: 'environment'
           Value: !Ref EnvironmentName
@@ -227,7 +228,7 @@ Resources:
       HealthCheckIntervalSeconds: 150
       HealthCheckPath: /
       HealthCheckProtocol: HTTP
-      HealthCheckTimeoutSeconds: 150
+      HealthCheckTimeoutSeconds: 120
       HealthyThresholdCount: 2
       TargetType: ip
       Port: !Ref ContainerPort
