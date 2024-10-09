@@ -94,14 +94,7 @@ jobs:
           role-to-assume: ${{env.AWS_ROLE_TO_ASSUME}}
           role-session-name: networking-infra
           aws-region: ${{env.AWS_REGION}}
-      - name: Cache rain install
-        id: cache-rain-install
-        uses: actions/cache@v4
-        with:
-          path: ./rain-cli
-          key: ${{ runner.os }}-rain-pkg
       - name: Install aws rain package
-        if: steps.cache-rain-install.outputs.cache-hit != 'true'
         run: |
           sudo apt install zip unzip
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
@@ -163,12 +156,6 @@ jobs:
           aws-region: ${{env.AWS_REGION}}
       - name:  Setup Parameters 
         run: |
-          ls -al
-          for t in $(find ./templates/lambdas -name '*.yaml' -or -name '*.json');
-            do
-              ./rain-cli/rain pkg $t --output $t
-            done
-          
           aws cloudformation deploy --template-file ./setup-pipelines/vpcParameters.yml --stack-name $APP_NAME-ssm-infrastructure-$ENVIRONMENT --parameter-overrides EnvironmentName=$ENVIRONMENT AppName=$APP_NAME \
                                     VpcCidr="$VPC_CIDR" VpcNamesForPrivate="$VPC_NAMES_FOR_PRIVATE" VpcNamesForPublic="$VPC_NAMES_FOR_PUBLIC" VpcMaskForPrivate=$VPC_MASK_FOR_PRIVATE VpcMaskForPublic=$VPC_MASK_FOR_PUBLIC \
                                     --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM
@@ -202,8 +189,23 @@ jobs:
           role-to-assume: ${{env.AWS_ROLE_TO_ASSUME}}
           role-session-name: networking-infra-deploy
           aws-region: ${{env.AWS_REGION}}
+      - name: Install aws rain package
+        run: |
+          sudo apt install zip unzip
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          curl -L https://github.com/aws-cloudformation/rain/releases/download/v1.15.0/rain-v1.15.0_linux-amd64.zip --output rain-cli.zip
+
+          echo Unzipping rain-cli.zip file ...
+          unzip -o -q -d . rain-cli.zip
+
+          mv rain-v1.15.0_linux-amd64 rain-cli
+          ./rain-cli/rain --version
       - name:  Upload templates to AWS
         run: |
+          for t in $(find ./templates/lambdas -name '*.yaml' -or -name '*.json');
+            do
+              ./rain-cli/rain pkg $t --output $t
+            done
           cd templates
           zip masterTemplate.zip ./masterTemplate.yaml
           cd ..
