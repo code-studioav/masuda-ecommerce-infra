@@ -75,6 +75,23 @@ Resources:
               - ecr:BatchGetImage
               - ecr:BatchCheckLayerAvailability
               - ecr:GetAuthorizationToken
+      LifecyclePolicy: |
+        {
+          "rules": [
+            {
+              "rulePriority": 1,
+              "description": "Keep the previous untagged image, expire all others",
+              "selection": {
+                "tagStatus": "untagged",
+                "countType": "imageCountMoreThan",
+                "countNumber": 1
+              },
+              "action": {
+                "type": "expire"
+              }
+            }
+          ]
+        }
       Tags:
         - Key: 'environment'
           Value: !Ref EnvironmentName
