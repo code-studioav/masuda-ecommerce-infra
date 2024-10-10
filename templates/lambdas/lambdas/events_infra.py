@@ -10,11 +10,12 @@ def handler(event, context):
     
     try:
         ecs = boto3.client('ecs')
-        response["updateServiceResponse"] = ecs.update_service(
+        ecs_response = ecs.update_service(
             cluster=ecs_cluster,
             service=ecs_service,
             forceNewDeployment=True
         )
+        print(ecs_response)
     except botocore.exceptions.ClientError as e:
         traceback.print_exc()
         response["status"] = "failure"
