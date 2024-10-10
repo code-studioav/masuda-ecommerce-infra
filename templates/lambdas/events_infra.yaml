@@ -10,8 +10,6 @@ Parameters:
     Type: String
   ECSClusterName:
     Type: String
-  ECRImageArn:
-    Type: String
 
 Resources:
   EventsInfraLambdaExecutionRole:
@@ -70,13 +68,13 @@ Resources:
           - aws.ecr
         detail-type:
           - 'ECR Image Action'
-        resources:
-          - !Ref ECRImageArn
         detail:
           action-type:
             - PUSH
           result:
             - SUCCESS
+          repository-name:
+            - !Sub '${EnvironmentName}-${AppName}/ecommerce-web'
           image-tag:
             - !Sub '${EnvironmentName}-latest'
       Targets:

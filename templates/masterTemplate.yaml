@@ -212,7 +212,6 @@ Resources:
         ECSServiceName: !GetAtt StackContainers.Outputs.ServiceName
         ECSClusterName: !GetAtt StackContainers.Outputs.ClusterName
         ECSServiceArn: !GetAtt StackContainers.Outputs.ServiceArn
-        ECRImageArn: !GetAtt StackContainers.Outputs.ContainerArn
       TimeoutInMinutes: 60
 
   
