@@ -22,6 +22,7 @@ Resources:
     Properties:
       Status: 'Active'
       UserName: !Ref EcommerceIamUser
+  
   EcommerceIamUserCredentialsSecret:
     Type: 'AWS::SecretsManager::Secret'
     Properties:
@@ -32,6 +33,12 @@ Resources:
         - UserName: !Ref EcommerceIamAccessKeys
           Password: !GetAtt EcommerceIamAccessKeys.SecretAccessKey
   
+  EcommerceAppLog:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/ecs/${AppName}
+      RetentionInDays: 5
+
   EcommerceIamPrincipalPolicy:
     Type: AWS::IAM::Policy
     Properties:
@@ -52,6 +59,14 @@ Resources:
               - secretsmanager:GetSecretValue
             Resource:
               - !Ref EcommerceIamUserCredentialsSecret
+          - Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+              - logs:DescribeLogStreams
+              - logs:DescribeLogGroups
+            Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*
 
 Outputs:
   EcommerceIamUserName:
